@@ -1,0 +1,2 @@
+junit.SampleConfigCase.baseDir=${basedir}/build/example-xml
+junit.ServiceCase.baseDir=${example-xml.build.dir}/services
