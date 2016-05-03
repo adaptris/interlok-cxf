@@ -31,10 +31,7 @@ import com.adaptris.annotation.InputFieldHint;
 import com.adaptris.core.AdaptrisMessage;
 import com.adaptris.core.CoreException;
 import com.adaptris.core.ServiceException;
-import com.adaptris.core.licensing.License;
-import com.adaptris.core.licensing.License.LicenseType;
-import com.adaptris.core.licensing.LicenseChecker;
-import com.adaptris.core.licensing.LicensedService;
+import com.adaptris.core.ServiceImp;
 import com.adaptris.core.util.ExceptionHelper;
 import com.adaptris.security.password.Password;
 import com.adaptris.util.TimeInterval;
@@ -65,7 +62,7 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
 @AdapterComponent
 @ComponentProfile(summary = "Execute a webservice using CXF", tag = "service,webservices,cxf")
 @DisplayOrder(order = {"wsdlUrl", "portName", "serviceName", "soapAction", "wsdlPortUrl", "username", "password"})
-public class ApacheSoapService extends LicensedService {
+public class ApacheSoapService extends ServiceImp {
 
   private static final TimeInterval DEFAULT_REQUEST_TIMEOUT = new TimeInterval(50l, TimeUnit.SECONDS);
   private static final TimeInterval DEFAULT_CONNECTION_TIMEOUT = new TimeInterval(10l, TimeUnit.SECONDS);
@@ -174,14 +171,8 @@ public class ApacheSoapService extends LicensedService {
   }
 
   @Override
-  protected void prepareService() throws CoreException {
-    LicenseChecker.newChecker().checkLicense(this);
-  }
+  public void prepare() throws CoreException {}
 
-  @Override
-  public boolean isEnabled(License license) {
-    return license.isEnabled(LicenseType.Standard);
-  }
 
   /**
    * The URL from which to download the WSDL.
