@@ -1,7 +1,7 @@
 ﻿<project basedir="." default="compile" name="webservice-cxf" xmlns:adapter="uri:adapter" xmlns:ivy="antlib:org.apache.ivy.ant">
   <property file="build.properties"/>
   <property file="ivy.properties"/>
-  <import file="${basedir}/../resources/ant-ivy-includes.xml"/> <!-- Ivy tasks -->
+  <import file="${basedir}/ivy/ant-ivy-includes.xml"/> <!-- Ivy tasks -->
 
   <tstamp>
     <format property="today" pattern="yyyy-MM-dd" locale="en"/>
@@ -63,7 +63,7 @@
     <property name="yguard.report" value="${build.dir}/${project.name}-${jar.version}.yguard.xml.gz"/>
 
 		<!--Ivy settings-->
-		<property name="ivy.settings.xml" value="${basedir}/../resources/ivy-settings.xml"/>
+		<property name="ivy.settings.xml" value="${basedir}/ivy/ivy-settings.xml"/>
 
   </target>
 
