@@ -21,9 +21,10 @@
   <publications>
      <artifact name="adp-webservice-cxf" type="jar" ext="jar"/>
      <artifact name="adp-webservice-cxf" type="pom" ext="pom"/>
-     <artifact name="adp-webservice-cxf-javadoc" type="javadoc" ext="zip" conf="javadoc"/>
-     <artifact name="adp-webservice-cxf-examples" type="examples" ext="zip" conf="examples"/>
+
+
      <artifact type="javadoc" ext="jar" conf="javadoc" m:classifier="javadoc"/>
+     <artifact type="examples" ext="jar" conf="examples" m:classifier="examples"/>
   </publications>
   <dependencies>
     <dependency org="com.adaptris" name="adp-core" rev="${adp-core-version}" conf="compile->default;javadoc->javadoc" changing="true"/>
@@ -46,7 +47,7 @@
     <!-- For Various ANT Tasks -->
     <dependency org="ant-contrib" name="ant-contrib" rev="1.0b3" conf="ant->default" transitive="false"/>
     <dependency org="com.yworks"  name="yguard" rev="2.5.2" conf="ant->default" transitive="false"/>
-    <dependency org="org.jacoco" name="org.jacoco.ant" rev="0.7.7.201606060606" conf="ant->default"/>
+    <dependency org="org.jacoco" name="org.jacoco.ant" rev="0.7.9" conf="ant->default"/>
 
     <dependency org="com.adaptris" name="code-signing" rev="2019-RELEASE" conf="signing->default"/>
 
