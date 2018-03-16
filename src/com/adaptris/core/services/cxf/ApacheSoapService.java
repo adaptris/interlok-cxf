@@ -33,6 +33,7 @@ import com.adaptris.core.CoreException;
 import com.adaptris.core.ServiceException;
 import com.adaptris.core.ServiceImp;
 import com.adaptris.core.util.ExceptionHelper;
+import com.adaptris.interlok.resolver.ExternalResolver;
 import com.adaptris.security.password.Password;
 import com.adaptris.util.TimeInterval;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
@@ -86,7 +87,7 @@ public class ApacheSoapService extends ServiceImp {
   @AdvancedConfig
   private String wsdlPortUrl;
   private String username;
-  @InputFieldHint(style = "PASSWORD")
+  @InputFieldHint(style = "PASSWORD", external = true)
   private String password;
   @AdvancedConfig
   private TimeInterval connectionTimeout;
@@ -145,7 +146,8 @@ public class ApacheSoapService extends ServiceImp {
       }
 
       if (!isEmpty(getPassword())) {
-        dispatch.getRequestContext().put(BindingProvider.PASSWORD_PROPERTY, Password.decode(getPassword()));
+        dispatch.getRequestContext().put(BindingProvider.PASSWORD_PROPERTY,
+            Password.decode(ExternalResolver.resolve(getPassword())));
       }
       dispatch.getRequestContext().put(COM_SUN_REQUEST_TIMEOUT, requestTimeout());
       dispatch.getRequestContext().put(COM_SUN_ALT_REQUEST_TIMEOUT, requestTimeout());
