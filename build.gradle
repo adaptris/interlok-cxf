@@ -97,7 +97,7 @@ dependencies {
   compile ("com.adaptris:interlok-core:$interlokCoreVersion") { changing= true}
   compile ("com.adaptris:interlok-common:$interlokCoreVersion") { changing= true}
   compile ("org.apache.cxf:cxf-rt-frontend-jaxws:2.7.7")
-  compile ("org.apache.cxf:cxf-rt-transports-http:2.7.7")
+  compile ("org.apache.cxf:cxf-rt-transports-http:3.2.6")
 
   compile ("org.slf4j:slf4j-api:$slf4jVersion")
 
