@@ -18,6 +18,7 @@ import javax.xml.ws.BindingProvider;
 import javax.xml.ws.Dispatch;
 import javax.xml.ws.Service;
 
+import org.apache.commons.lang.BooleanUtils;
 import org.apache.cxf.BusFactory;
 import org.apache.cxf.interceptor.LoggingOutInterceptor;
 import org.apache.cxf.staxutils.StaxSource;
@@ -56,7 +57,6 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
  * </p>
  * 
  * @config apache-cxf-soap-service
- * @license STANDARD
  * 
  */
 @XStreamAlias("apache-cxf-soap-service")
@@ -96,7 +96,6 @@ public class ApacheSoapService extends ServiceImp {
   @AdvancedConfig
   private Boolean enableDebug;
 
-  private transient Service service;
   private transient Dispatch<Source> dispatch;
   private transient Transformer transformer;
 
@@ -113,7 +112,6 @@ public class ApacheSoapService extends ServiceImp {
 
   @Override
   protected void closeService() {
-
   }
 
   @Override
@@ -129,7 +127,7 @@ public class ApacheSoapService extends ServiceImp {
       if (debugEnabled()) {
         BusFactory.getDefaultBus().getOutInterceptors().add(new LoggingOutInterceptor());
       }
-      service = Service.create(wsdlURL, new QName(getNamespace(), getServiceName()));
+      Service service = Service.create(wsdlURL, new QName(getNamespace(), getServiceName()));
       dispatch = service.createDispatch(new QName(getNamespace(), getPortName()), Source.class, Service.Mode.PAYLOAD);
 
       if (!isEmpty(getSoapAction())) {
@@ -156,7 +154,7 @@ public class ApacheSoapService extends ServiceImp {
       transformer = TransformerFactory.newInstance().newTransformer();
     }
     catch (Exception e) {
-      ExceptionHelper.rethrowCoreException(e);
+      throw ExceptionHelper.wrapCoreException(e);
     }
   }
 
@@ -301,8 +299,8 @@ public class ApacheSoapService extends ServiceImp {
     this.enableDebug = enableDebug;
   }
 
-  boolean debugEnabled() {
-    return getEnableDebug() != null ? getEnableDebug().booleanValue() : false;
+  private boolean debugEnabled() {
+    return BooleanUtils.toBooleanDefaultIfNull(getEnableDebug(), false);
   }
 
   /**
