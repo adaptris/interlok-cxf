@@ -28,6 +28,7 @@ import com.adaptris.annotation.AdapterComponent;
 import com.adaptris.annotation.AdvancedConfig;
 import com.adaptris.annotation.ComponentProfile;
 import com.adaptris.annotation.DisplayOrder;
+import com.adaptris.annotation.InputFieldDefault;
 import com.adaptris.annotation.InputFieldHint;
 import com.adaptris.core.AdaptrisMessage;
 import com.adaptris.core.CoreException;
@@ -94,10 +95,15 @@ public class ApacheSoapService extends ServiceImp {
   @AdvancedConfig
   private TimeInterval requestTimeout;
   @AdvancedConfig
+  @InputFieldDefault(value = "false")
   private Boolean enableDebug;
+  @AdvancedConfig
+  @InputFieldDefault(value = "false")
+  private Boolean perMessageDispatch;
 
-  private transient Dispatch<Source> dispatch;
+  private transient Service service;
   private transient Transformer transformer;
+  private transient DispatchBuilder dispatchBuilder;
 
   static {
     // Because we can't depend on woodstox due to XStream issues, we have to
@@ -112,6 +118,9 @@ public class ApacheSoapService extends ServiceImp {
 
   @Override
   protected void closeService() {
+    if (dispatchBuilder != null) {
+      dispatchBuilder.destroy();
+    }
   }
 
   @Override
@@ -127,30 +136,12 @@ public class ApacheSoapService extends ServiceImp {
       if (debugEnabled()) {
         BusFactory.getDefaultBus().getOutInterceptors().add(new LoggingOutInterceptor());
       }
-      Service service = Service.create(wsdlURL, new QName(getNamespace(), getServiceName()));
-      dispatch = service.createDispatch(new QName(getNamespace(), getPortName()), Source.class, Service.Mode.PAYLOAD);
-
-      if (!isEmpty(getSoapAction())) {
-        dispatch.getRequestContext().put(Dispatch.SOAPACTION_USE_PROPERTY, true);
-        dispatch.getRequestContext().put(Dispatch.SOAPACTION_URI_PROPERTY, getSoapAction());
+      service = Service.create(wsdlURL, new QName(getNamespace(), getServiceName()));
+      if (perMessageDispatch()) {
+        dispatchBuilder = new PerMessageDispatcher();
+      } else {
+        dispatchBuilder = new PersistentDispatcher();
       }
-
-      if (!isEmpty(getWsdlPortUrl())) {
-        dispatch.getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, getWsdlPortUrl());
-      }
-
-      if (!isEmpty(getUsername())) {
-        dispatch.getRequestContext().put(BindingProvider.USERNAME_PROPERTY, getUsername());
-      }
-
-      if (!isEmpty(getPassword())) {
-        dispatch.getRequestContext().put(BindingProvider.PASSWORD_PROPERTY,
-            Password.decode(ExternalResolver.resolve(getPassword())));
-      }
-      dispatch.getRequestContext().put(COM_SUN_REQUEST_TIMEOUT, requestTimeout());
-      dispatch.getRequestContext().put(COM_SUN_ALT_REQUEST_TIMEOUT, requestTimeout());
-      dispatch.getRequestContext().put(COM_SUN_CONNECT_TIMEOUT, connectTimeout());
-      dispatch.getRequestContext().put(COM_SUN_ALT_CONNECT_TIMEOUT, connectTimeout());
       transformer = TransformerFactory.newInstance().newTransformer();
     }
     catch (Exception e) {
@@ -161,8 +152,9 @@ public class ApacheSoapService extends ServiceImp {
   @Override
   public void doService(AdaptrisMessage msg) throws ServiceException {
     try (InputStream in = msg.getInputStream(); OutputStream out = msg.getOutputStream()) {
+      Dispatch<Source> dispatcher = dispatchBuilder.build(service, msg);
       StaxSource source = new StaxSource(XMLInputFactory.newInstance().createXMLStreamReader(in));
-      Source response = dispatch.invoke(source);
+      Source response = dispatcher.invoke(source);
       transformer.transform(response, new StreamResult(out));
     }
     catch (Exception e) {
@@ -173,6 +165,14 @@ public class ApacheSoapService extends ServiceImp {
   @Override
   public void prepare() throws CoreException {}
 
+
+  private Dispatch<Source> configureTimeouts(Dispatch<Source> d) {
+    d.getRequestContext().put(COM_SUN_REQUEST_TIMEOUT, requestTimeout());
+    d.getRequestContext().put(COM_SUN_ALT_REQUEST_TIMEOUT, requestTimeout());
+    d.getRequestContext().put(COM_SUN_CONNECT_TIMEOUT, connectTimeout());
+    d.getRequestContext().put(COM_SUN_ALT_CONNECT_TIMEOUT, connectTimeout());
+    return d;
+  }
 
   /**
    * The URL from which to download the WSDL.
@@ -375,11 +375,111 @@ public class ApacheSoapService extends ServiceImp {
   }
 
   private int connectTimeout() {
-    return (int) (getConnectionTimeout() != null ? getConnectionTimeout().toMilliseconds() : DEFAULT_CONNECTION_TIMEOUT
-        .toMilliseconds());
+    return (int) TimeInterval.toMillisecondsDefaultIfNull(getConnectionTimeout(), DEFAULT_CONNECTION_TIMEOUT);
   }
 
   private int requestTimeout() {
-    return (int) (getRequestTimeout() != null ? getRequestTimeout().toMilliseconds() : DEFAULT_REQUEST_TIMEOUT.toMilliseconds());
+    return (int) TimeInterval.toMillisecondsDefaultIfNull(getRequestTimeout(), DEFAULT_REQUEST_TIMEOUT);
+  }
+
+  public Boolean getPerMessageDispatch() {
+    return perMessageDispatch;
+  }
+
+  /**
+   * Set this to true if you want to dynamically resolve {@link #getWsdlPortUrl()}, {@link #getSoapAction()}, {@link #getUsername()}
+   * and {@link #getPassword()} dynamically from the message using the standard expression syntax.
+   * <p>
+   * Setting this to true, will cause a new {@code Dispatch} object to be created during every {@link #doService(AdaptrisMessage)}
+   * method, this may incur a high cost of initialisation.
+   * </p>
+   * 
+   * @param b true to enable, default is false.
+   */
+  public void setPerMessageDispatch(Boolean b) {
+    this.perMessageDispatch = b;
+  }
+
+  private boolean perMessageDispatch() {
+    return BooleanUtils.toBooleanDefaultIfNull(getPerMessageDispatch(), false);
+  }
+
+  protected interface DispatchBuilder {
+    Dispatch<Source> build(Service s, AdaptrisMessage msg) throws Exception;
+
+    void destroy();
+  }
+
+  private class PersistentDispatcher implements DispatchBuilder {
+
+    private Dispatch<Source> dispatch;
+
+    @Override
+    public Dispatch<Source> build(Service s, AdaptrisMessage msg) throws Exception {
+      if (dispatch == null) {
+        Dispatch d = service.createDispatch(new QName(getNamespace(), getPortName()), Source.class, Service.Mode.PAYLOAD);
+        if (!isEmpty(getSoapAction())) {
+          d.getRequestContext().put(Dispatch.SOAPACTION_USE_PROPERTY, true);
+          d.getRequestContext().put(Dispatch.SOAPACTION_URI_PROPERTY, getSoapAction());
+        }
+
+        if (!isEmpty(getWsdlPortUrl())) {
+          d.getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, getWsdlPortUrl());
+        }
+
+        if (!isEmpty(getUsername())) {
+          d.getRequestContext().put(BindingProvider.USERNAME_PROPERTY, getUsername());
+        }
+
+        if (!isEmpty(getPassword())) {
+          d.getRequestContext().put(BindingProvider.PASSWORD_PROPERTY, Password.decode(ExternalResolver.resolve(getPassword())));
+        }
+        dispatch = configureTimeouts(d);
+      }
+      return dispatch;
+    }
+
+    @Override
+    public void destroy() {
+      dispatch = null;
+    }
+
+  }
+
+  private class PerMessageDispatcher implements DispatchBuilder {
+
+    private Dispatch<Source> dispatch;
+
+    @Override
+    public Dispatch<Source> build(Service s, AdaptrisMessage msg) throws Exception {
+      if (dispatch == null) {
+        Dispatch d = service.createDispatch(new QName(getNamespace(), getPortName()), Source.class, Service.Mode.PAYLOAD);
+        if (!isEmpty(getSoapAction())) {
+          d.getRequestContext().put(Dispatch.SOAPACTION_USE_PROPERTY, true);
+          d.getRequestContext().put(Dispatch.SOAPACTION_URI_PROPERTY, msg.resolve(getSoapAction()));
+        }
+
+        if (!isEmpty(getWsdlPortUrl())) {
+          d.getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, msg.resolve(getWsdlPortUrl()));
+        }
+
+        if (!isEmpty(getUsername())) {
+          d.getRequestContext().put(BindingProvider.USERNAME_PROPERTY, msg.resolve(getUsername()));
+        }
+
+        if (!isEmpty(getPassword())) {
+          d.getRequestContext().put(BindingProvider.PASSWORD_PROPERTY,
+              Password.decode(msg.resolve(ExternalResolver.resolve(getPassword()))));
+        }
+        dispatch = configureTimeouts(d);
+      }
+      return dispatch;
+    }
+
+    @Override
+    public void destroy() {
+      dispatch = null;
+    }
+
   }
 }
