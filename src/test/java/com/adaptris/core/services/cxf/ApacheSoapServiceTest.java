@@ -1,6 +1,7 @@
 package com.adaptris.core.services.cxf;
 
 import java.io.ByteArrayInputStream;
+import java.util.concurrent.TimeUnit;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.ws.soap.SOAPFaultException;
@@ -12,6 +13,7 @@ import com.adaptris.core.AdaptrisMessage;
 import com.adaptris.core.AdaptrisMessageFactory;
 import com.adaptris.core.ServiceCase;
 import com.adaptris.core.ServiceException;
+import com.adaptris.core.util.LifecycleHelper;
 import com.adaptris.util.TimeInterval;
 
 public class ApacheSoapServiceTest extends ServiceCase {
@@ -22,6 +24,93 @@ public class ApacheSoapServiceTest extends ServiceCase {
 
   public ApacheSoapServiceTest() {
     super();
+  }
+
+  public void testWsdlUrl() throws Exception {
+    ApacheSoapService service = new ApacheSoapService();
+    assertNull(service.getWsdlUrl());
+    service.setWsdlUrl("http://localhost:8080/?wsdl");
+    assertEquals("http://localhost:8080/?wsdl", service.getWsdlUrl());
+  }
+
+  public void testPortName() throws Exception {
+    ApacheSoapService service = new ApacheSoapService();
+    assertNull(service.getPortName());
+    service.setPortName("Port");
+    assertEquals("Port", service.getPortName());
+  }
+
+  public void testServiceName() throws Exception {
+    ApacheSoapService service = new ApacheSoapService();
+    assertNull(service.getServiceName());
+    service.setServiceName("ServiceName");
+    assertEquals("ServiceName", service.getServiceName());
+  }
+
+  public void testNamespace() throws Exception {
+    ApacheSoapService service = new ApacheSoapService();
+    assertNull(service.getNamespace());
+    service.setNamespace("ns");
+    assertEquals("ns", service.getNamespace());
+  }
+
+  public void testSoapAction() throws Exception {
+    ApacheSoapService service = new ApacheSoapService();
+    assertNull(service.getSoapAction());
+    service.setSoapAction("stuff");
+    assertEquals("stuff", service.getSoapAction());
+  }
+
+  @SuppressWarnings("deprecation")
+  public void testWsdlPortUrl() throws Exception {
+    ApacheSoapService service = new ApacheSoapService();
+    assertNull(service.getWsdlPortUrl());
+    assertNull(service.getEndpointAddress());
+    service.setWsdlPortUrl("portUrl");
+    assertNull(service.getEndpointAddress());
+    assertEquals("portUrl", service.getWsdlPortUrl());
+    assertEquals("portUrl", service.endpointAddress());
+  }
+
+  @SuppressWarnings("deprecation")
+  public void testEndpointAddress() throws Exception {
+    ApacheSoapService service = new ApacheSoapService();
+    assertNull(service.getEndpointAddress());
+    assertNull(service.getWsdlPortUrl());
+    service.setEndpointAddress("endpointAddress");
+    assertEquals("endpointAddress", service.getEndpointAddress());
+    assertNull(service.getWsdlPortUrl());
+    assertEquals("endpointAddress", service.endpointAddress());
+  }
+
+  public void testUsername() throws Exception {
+    ApacheSoapService service = new ApacheSoapService();
+    assertNull(service.getUsername());
+    service.setUsername("user");
+    assertEquals("user", service.getUsername());
+  }
+
+  public void testPassword() throws Exception {
+    ApacheSoapService service = new ApacheSoapService();
+    assertNull(service.getPassword());
+    service.setPassword("pw");
+    assertEquals("pw", service.getPassword());
+  }
+
+  public void testConnectTimeout() throws Exception {
+    ApacheSoapService service = new ApacheSoapService();
+    TimeInterval t = new TimeInterval(10L, TimeUnit.MILLISECONDS);
+    assertNull(service.getConnectionTimeout());
+    service.setConnectTimeout(t);
+    assertEquals(t, service.getConnectionTimeout());
+  }
+
+  public void testRequestTimeout() throws Exception {
+    ApacheSoapService service = new ApacheSoapService();
+    TimeInterval t = new TimeInterval(10L, TimeUnit.MILLISECONDS);
+    assertNull(service.getRequestTimeout());
+    service.setRequestTimeout(t);
+    assertEquals(t, service.getRequestTimeout());
   }
 
   public void testGenerateFault() throws Exception {
@@ -36,22 +125,33 @@ public class ApacheSoapServiceTest extends ServiceCase {
   }
   
   public void testInvokeEchoService() throws Exception {
-    AdaptrisMessage msg = AdaptrisMessageFactory.getDefaultInstance().newMessage(ECHO_REQUEST);
-    ServiceCase.execute(create(), msg);
-    Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(msg.getPayload()));
-    String val = doc.getElementsByTagName("return").item(0).getTextContent();
-    Assert.assertEquals("Echoing data: Hello World", val);
-  }  
+    ApacheSoapService service = LifecycleHelper.initAndStart(create());
+    try {
+      AdaptrisMessage msg = AdaptrisMessageFactory.getDefaultInstance().newMessage(ECHO_REQUEST);
+      service.doService(AdaptrisMessageFactory.getDefaultInstance().newMessage(ECHO_REQUEST));
+      service.doService(msg);
+      Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(msg.getPayload()));
+      String val = doc.getElementsByTagName("return").item(0).getTextContent();
+      Assert.assertEquals("Echoing data: Hello World", val);
+    } finally {
+      LifecycleHelper.stopAndClose(service);
+    }
+  }
 
   public void testInvokeEchoServicePerMessage() throws Exception {
     AdaptrisMessage msg = AdaptrisMessageFactory.getDefaultInstance().newMessage(ECHO_REQUEST);
     ApacheSoapService service = create();
-    service.setPerMessageDispatch(true);
-    ServiceCase.execute(service, AdaptrisMessageFactory.getDefaultInstance().newMessage(ECHO_REQUEST));
-    ServiceCase.execute(service, msg);
-    Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(msg.getPayload()));
-    String val = doc.getElementsByTagName("return").item(0).getTextContent();
-    Assert.assertEquals("Echoing data: Hello World", val);
+    try {
+      service.setPerMessageDispatch(true);
+      LifecycleHelper.initAndStart(service);
+      service.doService(AdaptrisMessageFactory.getDefaultInstance().newMessage(ECHO_REQUEST));
+      service.doService(msg);
+      Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(msg.getPayload()));
+      String val = doc.getElementsByTagName("return").item(0).getTextContent();
+      Assert.assertEquals("Echoing data: Hello World", val);
+    } finally {
+      LifecycleHelper.stopAndClose(service);
+    }
   }
 
   private ApacheSoapService create() {
