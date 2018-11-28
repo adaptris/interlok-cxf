@@ -494,6 +494,7 @@ public class ApacheSoapService extends ServiceImp {
       DispatchConfig.SoapAction.apply(dispatch, () -> { return getSoapAction(); });
       DispatchConfig.EndpointAddress.apply(dispatch, () -> {return endpointAddress(); });
       DispatchConfig.Username.apply(dispatch, () -> { return getUsername(); });
+      DispatchConfig.Password.apply(dispatch, () -> { return pw; });
       dispatch = configureTimeouts(dispatch);
     }
 
