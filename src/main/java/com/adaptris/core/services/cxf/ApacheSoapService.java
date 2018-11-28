@@ -103,7 +103,6 @@ public class ApacheSoapService extends ServiceImp {
   @InputFieldDefault(value = "false")
   private Boolean perMessageDispatch;
 
-  private transient Service service;
   private transient Transformer transformer;
   private transient DispatchBuilder dispatchBuilder;
 
@@ -164,9 +163,6 @@ public class ApacheSoapService extends ServiceImp {
 
   @Override
   protected void closeService() {
-    if (dispatchBuilder != null) {
-      dispatchBuilder.destroy();
-    }
   }
 
   @Override
@@ -177,11 +173,11 @@ public class ApacheSoapService extends ServiceImp {
       if (debugEnabled()) {
         BusFactory.getDefaultBus().getOutInterceptors().add(new LoggingOutInterceptor());
       }
-      service = Service.create(wsdlURL, new QName(getNamespace(), getServiceName()));
+      Service service = Service.create(wsdlURL, new QName(getNamespace(), getServiceName()));
       if (perMessageDispatch()) {
-        dispatchBuilder = new PerMessageDispatcher();
+        dispatchBuilder = new PerMessageDispatcher(service);
       } else {
-        dispatchBuilder = new PersistentDispatcher();
+        dispatchBuilder = new PersistentDispatcher(service);
       }
       transformer = TransformerFactory.newInstance().newTransformer();
     }
@@ -193,7 +189,7 @@ public class ApacheSoapService extends ServiceImp {
   @Override
   public void doService(AdaptrisMessage msg) throws ServiceException {
     try (InputStream in = msg.getInputStream(); OutputStream out = msg.getOutputStream()) {
-      Dispatch<Source> dispatcher = dispatchBuilder.build(service, msg);
+      Dispatch<Source> dispatcher = dispatchBuilder.build(msg);
       StaxSource source = new StaxSource(XMLInputFactory.newInstance().createXMLStreamReader(in));
       Source response = dispatcher.invoke(source);
       transformer.transform(response, new StreamResult(out));
@@ -485,41 +481,39 @@ public class ApacheSoapService extends ServiceImp {
   }
 
   protected interface DispatchBuilder {
-    Dispatch<Source> build(Service s, AdaptrisMessage msg) throws Exception;
-
-    default void destroy() {
-    }
+    Dispatch<Source> build(AdaptrisMessage msg) throws Exception;
   }
 
   private class PersistentDispatcher implements DispatchBuilder {
 
     private Dispatch<Source> dispatch;
 
-    @Override
-    public Dispatch<Source> build(Service s, AdaptrisMessage msg) throws Exception {
-      if (dispatch == null) {
-        Dispatch d = service.createDispatch(new QName(getNamespace(), getPortName()), Source.class, Service.Mode.PAYLOAD);
-        final String pw = Password.decode(ExternalResolver.resolve(getPassword()));
-        DispatchConfig.SoapAction.apply(d, () -> { return getSoapAction(); });
-        DispatchConfig.EndpointAddress.apply(d, () -> {return endpointAddress(); });
-        DispatchConfig.Username.apply(d, () -> { return getUsername(); });
-        DispatchConfig.Password.apply(d, () -> { return pw; });
-        dispatch = configureTimeouts(d);
-      }
-      return dispatch;
+    private PersistentDispatcher(Service s) throws Exception {
+      dispatch = s.createDispatch(new QName(getNamespace(), getPortName()), Source.class, Service.Mode.PAYLOAD);
+      final String pw = Password.decode(ExternalResolver.resolve(getPassword()));
+      DispatchConfig.SoapAction.apply(dispatch, () -> { return getSoapAction(); });
+      DispatchConfig.EndpointAddress.apply(dispatch, () -> {return endpointAddress(); });
+      DispatchConfig.Username.apply(dispatch, () -> { return getUsername(); });
+      dispatch = configureTimeouts(dispatch);
     }
 
     @Override
-    public void destroy() {
-      dispatch = null;
+    public Dispatch<Source> build(AdaptrisMessage msg) throws Exception {
+      return dispatch;
     }
 
   }
 
   private class PerMessageDispatcher implements DispatchBuilder {
 
+    private Service service;
+
+    private PerMessageDispatcher(Service s) throws Exception {
+      service = s;
+    }
+
     @Override
-    public Dispatch<Source> build(Service s, AdaptrisMessage msg) throws Exception {
+    public Dispatch<Source> build(AdaptrisMessage msg) throws Exception {
       final String pw = Password.decode(msg.resolve(ExternalResolver.resolve(getPassword())));
       Dispatch d = service.createDispatch(new QName(getNamespace(), getPortName()), Source.class, Service.Mode.PAYLOAD);
       DispatchConfig.SoapAction.apply(d, () -> { return msg.resolve(getSoapAction()); });
