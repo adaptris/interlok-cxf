@@ -1,10 +1,10 @@
 package com.adaptris.core.services.cxf;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
@@ -18,17 +18,18 @@ import javax.xml.ws.BindingProvider;
 import javax.xml.ws.Dispatch;
 import javax.xml.ws.Service;
 
-import org.apache.commons.lang.BooleanUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.cxf.BusFactory;
 import org.apache.cxf.interceptor.LoggingOutInterceptor;
 import org.apache.cxf.staxutils.StaxSource;
-import org.hibernate.validator.constraints.NotBlank;
 
 import com.adaptris.annotation.AdapterComponent;
 import com.adaptris.annotation.AdvancedConfig;
 import com.adaptris.annotation.ComponentProfile;
 import com.adaptris.annotation.DisplayOrder;
+import com.adaptris.annotation.InputFieldDefault;
 import com.adaptris.annotation.InputFieldHint;
+import com.adaptris.annotation.Removal;
 import com.adaptris.core.AdaptrisMessage;
 import com.adaptris.core.CoreException;
 import com.adaptris.core.ServiceException;
@@ -74,18 +75,18 @@ public class ApacheSoapService extends ServiceImp {
   private static final String COM_SUN_CONNECT_TIMEOUT = "com.sun.xml.internal.ws.connect.timeout";
   private static final String COM_SUN_ALT_CONNECT_TIMEOUT = "com.sun.xml.internal.ws.request.timeout";
 
-  @NotBlank
   private String wsdlUrl;
-  @NotBlank
   private String portName;
-  @NotBlank
   private String serviceName;
-  @NotBlank
   private String namespace;
   @AdvancedConfig
   private String soapAction;
   @AdvancedConfig
+  @Deprecated
+  @Removal(version = "3.10.0")
   private String wsdlPortUrl;
+  @AdvancedConfig
+  private String endpointAddress;
   private String username;
   @InputFieldHint(style = "PASSWORD", external = true)
   private String password;
@@ -94,10 +95,60 @@ public class ApacheSoapService extends ServiceImp {
   @AdvancedConfig
   private TimeInterval requestTimeout;
   @AdvancedConfig
+  @InputFieldDefault(value = "false")
+  @Deprecated
+  @Removal(version = "3.10.0")
   private Boolean enableDebug;
+  @AdvancedConfig
+  @InputFieldDefault(value = "false")
+  private Boolean perMessageDispatch;
 
-  private transient Dispatch<Source> dispatch;
   private transient Transformer transformer;
+  private transient DispatchBuilder dispatchBuilder;
+
+  public enum DispatchConfig {
+    Username() {
+      @Override
+      void apply(Dispatch<Source> d, ConfigItem c) throws Exception {
+        if (isNotEmpty(c.asString())) {
+          d.getRequestContext().put(BindingProvider.USERNAME_PROPERTY, c.asString());
+
+        }
+      }
+
+    },
+    Password() {
+      @Override
+      void apply(Dispatch<Source> d, ConfigItem c) throws Exception {
+        if (isNotEmpty(c.asString())) {
+          d.getRequestContext().put(BindingProvider.PASSWORD_PROPERTY, c.asString());
+
+        }
+      }
+
+    },
+    EndpointAddress() {
+      @Override
+      void apply(Dispatch<Source> d, ConfigItem c) throws Exception {
+        if (isNotEmpty(c.asString())) {
+          d.getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, c.asString());
+
+        }
+      }
+
+    },
+    SoapAction() {
+      @Override
+      void apply(Dispatch<Source> d, ConfigItem c) throws Exception {
+        if (isNotEmpty(c.asString())) {
+          d.getRequestContext().put(Dispatch.SOAPACTION_USE_PROPERTY, true);
+          d.getRequestContext().put(Dispatch.SOAPACTION_URI_PROPERTY, c.asString());
+        }
+      }
+    };
+
+    abstract void apply(Dispatch<Source> d, ConfigItem c) throws Exception;
+  }
 
   static {
     // Because we can't depend on woodstox due to XStream issues, we have to
@@ -115,42 +166,19 @@ public class ApacheSoapService extends ServiceImp {
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   protected void initService() throws CoreException {
-    URL wsdlURL;
     try {
-      wsdlURL = new URL(getWsdlUrl());
-    }
-    catch (MalformedURLException e) {
-      throw new CoreException("Failed to access WSDL URL [" + getWsdlUrl() + "]", e);
-    }
-    try {
+      URL wsdlURL = new URL(getWsdlUrl());
       if (debugEnabled()) {
         BusFactory.getDefaultBus().getOutInterceptors().add(new LoggingOutInterceptor());
       }
       Service service = Service.create(wsdlURL, new QName(getNamespace(), getServiceName()));
-      dispatch = service.createDispatch(new QName(getNamespace(), getPortName()), Source.class, Service.Mode.PAYLOAD);
-
-      if (!isEmpty(getSoapAction())) {
-        dispatch.getRequestContext().put(Dispatch.SOAPACTION_USE_PROPERTY, true);
-        dispatch.getRequestContext().put(Dispatch.SOAPACTION_URI_PROPERTY, getSoapAction());
+      if (perMessageDispatch()) {
+        dispatchBuilder = new PerMessageDispatcher(service);
+      } else {
+        dispatchBuilder = new PersistentDispatcher(service);
       }
-
-      if (!isEmpty(getWsdlPortUrl())) {
-        dispatch.getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, getWsdlPortUrl());
-      }
-
-      if (!isEmpty(getUsername())) {
-        dispatch.getRequestContext().put(BindingProvider.USERNAME_PROPERTY, getUsername());
-      }
-
-      if (!isEmpty(getPassword())) {
-        dispatch.getRequestContext().put(BindingProvider.PASSWORD_PROPERTY,
-            Password.decode(ExternalResolver.resolve(getPassword())));
-      }
-      dispatch.getRequestContext().put(COM_SUN_REQUEST_TIMEOUT, requestTimeout());
-      dispatch.getRequestContext().put(COM_SUN_ALT_REQUEST_TIMEOUT, requestTimeout());
-      dispatch.getRequestContext().put(COM_SUN_CONNECT_TIMEOUT, connectTimeout());
-      dispatch.getRequestContext().put(COM_SUN_ALT_CONNECT_TIMEOUT, connectTimeout());
       transformer = TransformerFactory.newInstance().newTransformer();
     }
     catch (Exception e) {
@@ -161,8 +189,9 @@ public class ApacheSoapService extends ServiceImp {
   @Override
   public void doService(AdaptrisMessage msg) throws ServiceException {
     try (InputStream in = msg.getInputStream(); OutputStream out = msg.getOutputStream()) {
+      Dispatch<Source> dispatcher = dispatchBuilder.build(msg);
       StaxSource source = new StaxSource(XMLInputFactory.newInstance().createXMLStreamReader(in));
-      Source response = dispatch.invoke(source);
+      Source response = dispatcher.invoke(source);
       transformer.transform(response, new StreamResult(out));
     }
     catch (Exception e) {
@@ -173,6 +202,14 @@ public class ApacheSoapService extends ServiceImp {
   @Override
   public void prepare() throws CoreException {}
 
+
+  private Dispatch<Source> configureTimeouts(Dispatch<Source> d) {
+    d.getRequestContext().put(COM_SUN_REQUEST_TIMEOUT, requestTimeout());
+    d.getRequestContext().put(COM_SUN_ALT_REQUEST_TIMEOUT, requestTimeout());
+    d.getRequestContext().put(COM_SUN_CONNECT_TIMEOUT, connectTimeout());
+    d.getRequestContext().put(COM_SUN_ALT_CONNECT_TIMEOUT, connectTimeout());
+    return d;
+  }
 
   /**
    * The URL from which to download the WSDL.
@@ -267,7 +304,11 @@ public class ApacheSoapService extends ServiceImp {
    * This optional property may be used to specify a different service address to that specified in the WSDL.
    * 
    * @return wsdlPortUrl
+   * @deprecated since 3.8.2; use {@link #getEndpointAddress()} instead as this matches the
+   *             {@code BindingProvider#ENDPOINT_ADDRESS_PROPERTY} better.
    */
+  @Deprecated
+  @Removal(version = "3.10.0")
   public String getWsdlPortUrl() {
     return wsdlPortUrl;
   }
@@ -276,16 +317,41 @@ public class ApacheSoapService extends ServiceImp {
    * This optional property may be used to specify a different service address to that specified in the WSDL.
    * 
    * @param wsdlPortUrl
+   * @deprecated since 3.8.2; use {@link #setEndpointAddress(String)} instead as this matches the
+   *             {@code BindingProvider#ENDPOINT_ADDRESS_PROPERTY} better.
    */
+  @Deprecated
+  @Removal(version = "3.10.0")
   public void setWsdlPortUrl(String wsdlPortUrl) {
     this.wsdlPortUrl = wsdlPortUrl;
   }
+
+  public String getEndpointAddress() {
+    return endpointAddress;
+  }
+
+  public void setEndpointAddress(String endpointAddress) {
+    this.endpointAddress = endpointAddress;
+  }
+
+  protected String endpointAddress() {
+    if (isNotEmpty(getWsdlPortUrl())) {
+      log.warn("Use of deprecated wsdl-port-url; use endpoint-address instead");
+      return getWsdlPortUrl();
+    }
+    return getEndpointAddress();
+  }
+
 
   /**
    * Provide additional web service debugging information.
    * 
    * @return enableDebug true = provide web service debug information
+   * @deprecated since 3.8.2; use log4j/slf4j/java.util.logging to get debug logging c.f. <a
+   *             href="http://cxf.apache.org/docs/general-cxf-logging.html>CXF Logging</a>
    */
+  @Deprecated
+  @Removal(version = "3.10.0")
   public Boolean getEnableDebug() {
     return enableDebug;
   }
@@ -293,12 +359,17 @@ public class ApacheSoapService extends ServiceImp {
   /**
    * Whether to provide additional debugging information.
    * 
-   * @param enableDebug true = provide web service debug information
+   * @param b true = provide web service debug information
+   * @deprecated since 3.8.2; use log4j/slf4j/java.util.logging to get debug logging c.f. <a
+   *             href="http://cxf.apache.org/docs/general-cxf-logging.html>CXF Logging</a>
    */
-  public void setEnableDebug(Boolean enableDebug) {
-    this.enableDebug = enableDebug;
+  @Deprecated
+  @Removal(version = "3.10.0")
+  public void setEnableDebug(Boolean b) {
+    this.enableDebug = b;
   }
 
+  @Deprecated
   private boolean debugEnabled() {
     return BooleanUtils.toBooleanDefaultIfNull(getEnableDebug(), false);
   }
@@ -375,11 +446,83 @@ public class ApacheSoapService extends ServiceImp {
   }
 
   private int connectTimeout() {
-    return (int) (getConnectionTimeout() != null ? getConnectionTimeout().toMilliseconds() : DEFAULT_CONNECTION_TIMEOUT
-        .toMilliseconds());
+    return (int) TimeInterval.toMillisecondsDefaultIfNull(getConnectionTimeout(), DEFAULT_CONNECTION_TIMEOUT);
   }
 
   private int requestTimeout() {
-    return (int) (getRequestTimeout() != null ? getRequestTimeout().toMilliseconds() : DEFAULT_REQUEST_TIMEOUT.toMilliseconds());
+    return (int) TimeInterval.toMillisecondsDefaultIfNull(getRequestTimeout(), DEFAULT_REQUEST_TIMEOUT);
   }
+
+  public Boolean getPerMessageDispatch() {
+    return perMessageDispatch;
+  }
+
+  /**
+   * Set this to true if you want to dynamically resolve {@link #getSoapAction()}, {@link #getUsername()}, {@link #getPassword()}
+   * and {@link #getEndpointAddress()} dynamically from the message using the standard expression syntax.
+   * <p>
+   * Note that setting this to true, will cause a new {@code Dispatch} object to be created during every
+   * {@link #doService(AdaptrisMessage)} method, this may incur a high cost of initialisation.
+   * </p>
+   * 
+   * @param b true to enable, default is false.
+   */
+  public void setPerMessageDispatch(Boolean b) {
+    this.perMessageDispatch = b;
+  }
+
+  private boolean perMessageDispatch() {
+    return BooleanUtils.toBooleanDefaultIfNull(getPerMessageDispatch(), false);
+  }
+
+  @FunctionalInterface
+  protected interface ConfigItem {
+    String asString();
+  }
+
+  protected interface DispatchBuilder {
+    Dispatch<Source> build(AdaptrisMessage msg) throws Exception;
+  }
+
+  private class PersistentDispatcher implements DispatchBuilder {
+
+    private Dispatch<Source> dispatch;
+
+    private PersistentDispatcher(Service s) throws Exception {
+      dispatch = s.createDispatch(new QName(getNamespace(), getPortName()), Source.class, Service.Mode.PAYLOAD);
+      final String pw = Password.decode(ExternalResolver.resolve(getPassword()));
+      DispatchConfig.SoapAction.apply(dispatch, () -> { return getSoapAction(); });
+      DispatchConfig.EndpointAddress.apply(dispatch, () -> {return endpointAddress(); });
+      DispatchConfig.Username.apply(dispatch, () -> { return getUsername(); });
+      DispatchConfig.Password.apply(dispatch, () -> { return pw; });
+      dispatch = configureTimeouts(dispatch);
+    }
+
+    @Override
+    public Dispatch<Source> build(AdaptrisMessage msg) throws Exception {
+      return dispatch;
+    }
+
+  }
+
+  private class PerMessageDispatcher implements DispatchBuilder {
+
+    private Service service;
+
+    private PerMessageDispatcher(Service s) throws Exception {
+      service = s;
+    }
+
+    @Override
+    public Dispatch<Source> build(AdaptrisMessage msg) throws Exception {
+      final String pw = Password.decode(msg.resolve(ExternalResolver.resolve(getPassword())));
+      Dispatch d = service.createDispatch(new QName(getNamespace(), getPortName()), Source.class, Service.Mode.PAYLOAD);
+      DispatchConfig.SoapAction.apply(d, () -> { return msg.resolve(getSoapAction()); });
+      DispatchConfig.EndpointAddress.apply(d, () -> { return msg.resolve(endpointAddress()); });
+      DispatchConfig.Username.apply(d, () -> { return msg.resolve(getUsername()); });
+      DispatchConfig.Password.apply(d, () -> { return pw; });
+      return configureTimeouts(d);
+    }
+  }
+
 }
