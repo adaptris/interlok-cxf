@@ -8,6 +8,7 @@ plugins {
   id 'jacoco'
   // Manage optional dependencies in maven pom.
   id 'nebula.optional-base' version '3.3.0'
+  id 'com.github.spotbugs' version '1.6.10'
 }
 
 ext {
@@ -239,6 +240,25 @@ publishing {
       }
       url mavenPublishUrl
     }
+  }
+}
+spotbugs {
+  // showProgress = "true"
+  effort = "max"
+  // Ignore failures?
+  // ignoreFailures = false
+
+  // We only care about "high priority" issues...
+  reportLevel = "high"
+}
+
+// disable spotbugsTests which checks our test code..
+spotbugsTest.enabled = false
+
+tasks.withType(com.github.spotbugs.SpotBugsTask) {
+  reports {
+    xml.enabled = false
+    html.enabled = true
   }
 }
 
