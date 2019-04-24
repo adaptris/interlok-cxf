@@ -165,7 +165,6 @@ workflows:
   on_commit:
     jobs:
       - build
-      - buildjava11
       - publish:
           context: nexus-publish
 
