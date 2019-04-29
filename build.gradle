@@ -8,6 +8,7 @@ plugins {
   id 'jacoco'
   // Manage optional dependencies in maven pom.
   id 'nebula.optional-base' version '3.3.0'
+  id 'com.github.spotbugs' version '1.6.10'
 }
 
 ext {
@@ -26,9 +27,9 @@ ext {
   componentName='Interlok Webservices via CXF'
   organizationName = "Adaptris Ltd"
   organizationUrl = "http://interlok.adaptris.net"
-  slf4jVersion = '1.7.25'
+  slf4jVersion = '1.7.26'
   cxfVersion = '3.2.7'
-  log4j2Version = '2.9.1'
+  log4j2Version = '2.11.2'
 }
 
 if (JavaVersion.current().isJava8Compatible()) {
@@ -239,6 +240,25 @@ publishing {
       }
       url mavenPublishUrl
     }
+  }
+}
+spotbugs {
+  // showProgress = "true"
+  effort = "max"
+  // Ignore failures?
+  // ignoreFailures = false
+
+  // We only care about "high priority" issues...
+  reportLevel = "high"
+}
+
+// disable spotbugsTests which checks our test code..
+spotbugsTest.enabled = false
+
+tasks.withType(com.github.spotbugs.SpotBugsTask) {
+  reports {
+    xml.enabled = false
+    html.enabled = true
   }
 }
 
