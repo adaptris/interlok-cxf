@@ -165,8 +165,6 @@ workflows:
   on_commit:
     jobs:
       - build
-      - publish:
-          context: nexus-publish
 
   nightly:
     triggers:
