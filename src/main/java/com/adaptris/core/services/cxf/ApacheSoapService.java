@@ -63,7 +63,8 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
 @XStreamAlias("apache-cxf-soap-service")
 @AdapterComponent
 @ComponentProfile(summary = "Execute a webservice using CXF", tag = "service,webservices,cxf")
-@DisplayOrder(order = {"wsdlUrl", "portName", "serviceName", "soapAction", "wsdlPortUrl", "username", "password"})
+@DisplayOrder(order = {"wsdlUrl", "portName", "serviceName", "soapAction", "endpointAddress", "wsdlPortUrl", "username", "password",
+    "useFallbackTransformer", "perMessageDispatch"})
 public class ApacheSoapService extends ServiceImp {
 
   private static final TimeInterval DEFAULT_REQUEST_TIMEOUT = new TimeInterval(50l, TimeUnit.SECONDS);
@@ -104,7 +105,6 @@ public class ApacheSoapService extends ServiceImp {
   @AdvancedConfig
   @InputFieldDefault(value = "false")
   private Boolean perMessageDispatch;
-  @AdvancedConfig
   @InputFieldDefault(value = "false")
   private Boolean useFallbackTransformer;
 
