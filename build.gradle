@@ -30,7 +30,6 @@ ext {
   slf4jVersion = '1.7.26'
   cxfVersion = '3.3.2'
   log4j2Version = '2.12.0'
-  istackVersion = '3.0.8'
 }
 
 if (JavaVersion.current().isJava8Compatible()) {
@@ -91,23 +90,6 @@ dependencies {
   compile ("com.adaptris:interlok-common:$interlokCoreVersion") { changing= true}
   compile ("org.apache.cxf:cxf-rt-frontend-jaxws:$cxfVersion")
   compile ("org.apache.cxf:cxf-rt-transports-http:$cxfVersion")
-  compile ("org.apache.cxf:cxf-core:$cxfVersion") {
-    exclude group: 'org.glassfish.jaxb', module: 'jaxb-xjc'
-  }
-  compile ("org.glassfish.jaxb:jaxb-xjc:2.3.2") {
-    exclude group: 'com.sun.istack', module: 'istack-commons-tools'
-    exclude group: 'com.sun.istack', module: 'istack-commons-runtime'
-  }
-  compile ("com.sun.istack:istack-commons-runtime:$istackVersion") {
-    exclude group: 'junit', module: 'junit'
-    exclude group: 'org.testng', module: 'testng'
-    exclude group: 'com.beust', module: 'jcommander'
-  }
-  compile ("com.sun.istack:istack-commons-tools:$istackVersion") {
-    exclude group: 'junit', module: 'junit'
-    exclude group: 'org.testng', module: 'testng'
-    exclude group: 'com.beust', module: 'jcommander'
-  }
 
   compile ("org.slf4j:slf4j-api:$slf4jVersion")
 
