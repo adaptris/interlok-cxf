@@ -63,7 +63,8 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
 @XStreamAlias("apache-cxf-soap-service")
 @AdapterComponent
 @ComponentProfile(summary = "Execute a webservice using CXF", tag = "service,webservices,cxf")
-@DisplayOrder(order = {"wsdlUrl", "portName", "serviceName", "soapAction", "wsdlPortUrl", "username", "password"})
+@DisplayOrder(order = {"wsdlUrl", "portName", "serviceName", "soapAction", "endpointAddress", "wsdlPortUrl", "username", "password",
+    "useFallbackTransformer", "perMessageDispatch"})
 public class ApacheSoapService extends ServiceImp {
 
   private static final TimeInterval DEFAULT_REQUEST_TIMEOUT = new TimeInterval(50l, TimeUnit.SECONDS);
@@ -74,6 +75,8 @@ public class ApacheSoapService extends ServiceImp {
   private static final String COM_SUN_ALT_REQUEST_TIMEOUT = "com.sun.xml.ws.request.timeout";
   private static final String COM_SUN_CONNECT_TIMEOUT = "com.sun.xml.internal.ws.connect.timeout";
   private static final String COM_SUN_ALT_CONNECT_TIMEOUT = "com.sun.xml.internal.ws.request.timeout";
+
+  public static final String FALLBACK_TRANSFORMER_FACTORY_IMPL = "com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl";
 
   private String wsdlUrl;
   private String portName;
@@ -102,6 +105,8 @@ public class ApacheSoapService extends ServiceImp {
   @AdvancedConfig
   @InputFieldDefault(value = "false")
   private Boolean perMessageDispatch;
+  @InputFieldDefault(value = "false")
+  private Boolean useFallbackTransformer;
 
   private transient Transformer transformer;
   private transient DispatchBuilder dispatchBuilder;
@@ -179,7 +184,12 @@ public class ApacheSoapService extends ServiceImp {
       } else {
         dispatchBuilder = new PersistentDispatcher(service);
       }
-      transformer = TransformerFactory.newInstance().newTransformer();
+      if (useJavaFallBackTransformer()) {
+        transformer = TransformerFactory.newInstance(FALLBACK_TRANSFORMER_FACTORY_IMPL, Thread.currentThread().getContextClassLoader())
+            .newTransformer();
+      } else {
+        transformer = TransformerFactory.newInstance().newTransformer();
+      }
     }
     catch (Exception e) {
       throw ExceptionHelper.wrapCoreException(e);
@@ -190,7 +200,9 @@ public class ApacheSoapService extends ServiceImp {
   public void doService(AdaptrisMessage msg) throws ServiceException {
     try (InputStream in = msg.getInputStream(); OutputStream out = msg.getOutputStream()) {
       Dispatch<Source> dispatcher = dispatchBuilder.build(msg);
-      StaxSource source = new StaxSource(XMLInputFactory.newInstance().createXMLStreamReader(in));
+      XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
+      xmlInputFactory.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE, Boolean.TRUE);
+      StaxSource source = new StaxSource(xmlInputFactory.createXMLStreamReader(in));
       Source response = dispatcher.invoke(source);
       transformer.transform(response, new StreamResult(out));
     }
@@ -201,7 +213,6 @@ public class ApacheSoapService extends ServiceImp {
 
   @Override
   public void prepare() throws CoreException {}
-
 
   private Dispatch<Source> configureTimeouts(Dispatch<Source> d) {
     d.getRequestContext().put(COM_SUN_REQUEST_TIMEOUT, requestTimeout());
@@ -473,6 +484,32 @@ public class ApacheSoapService extends ServiceImp {
 
   private boolean perMessageDispatch() {
     return BooleanUtils.toBooleanDefaultIfNull(getPerMessageDispatch(), false);
+  }
+
+  public Boolean getUseFallbackTransformer() {
+    return useFallbackTransformer;
+  }
+
+  /**
+   * Specify whether to force the service to use the java fallback {@link TransformerFactory} rather than discovering one via the
+   * normal {@link TransformerFactory#newInstance()}.
+   * <p>
+   * Recent versions of {@code net.sf.saxon:Saxon-HE} (specificially 9.9.x onwards) have strong opinions and may omit namespace
+   * attributes when their identity transformer is used; this can result in something that is unexpected to downstream services. If
+   * this is the case for you, then set this to be true; and you will use the {@value #FALLBACK_TRANSFORMER_FACTORY_IMPL} as the
+   * transformer factory instead.
+   * </p>
+   * 
+   * @param b true to use {@value #FALLBACK_TRANSFORMER_FACTORY_IMPL} as the {@link TransformerFactory}; false if not explicitly
+   *        configured.
+   * @since 3.9.1
+   */
+  public void setUseFallbackTransformer(Boolean b) {
+    this.useFallbackTransformer = b;
+  }
+
+  private boolean useJavaFallBackTransformer() {
+    return BooleanUtils.toBooleanDefaultIfNull(getUseFallbackTransformer(), false);
   }
 
   @FunctionalInterface
