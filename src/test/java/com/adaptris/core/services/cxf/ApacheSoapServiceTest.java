@@ -143,6 +143,7 @@ public class ApacheSoapServiceTest extends ServiceCase {
     ApacheSoapService service = create();
     try {
       service.setPerMessageDispatch(true);
+      service.setUseFallbackTransformer(true);
       LifecycleHelper.initAndStart(service);
       service.doService(AdaptrisMessageFactory.getDefaultInstance().newMessage(ECHO_REQUEST));
       service.doService(msg);
