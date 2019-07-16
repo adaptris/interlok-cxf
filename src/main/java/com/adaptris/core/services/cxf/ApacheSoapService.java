@@ -19,6 +19,7 @@ import javax.xml.ws.Dispatch;
 import javax.xml.ws.Service;
 
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.cxf.BusFactory;
 import org.apache.cxf.interceptor.LoggingOutInterceptor;
 import org.apache.cxf.staxutils.StaxSource;
@@ -34,6 +35,8 @@ import com.adaptris.core.AdaptrisMessage;
 import com.adaptris.core.CoreException;
 import com.adaptris.core.ServiceException;
 import com.adaptris.core.ServiceImp;
+import com.adaptris.core.metadata.MetadataFilter;
+import com.adaptris.core.metadata.RemoveAllMetadataFilter;
 import com.adaptris.core.util.ExceptionHelper;
 import com.adaptris.interlok.resolver.ExternalResolver;
 import com.adaptris.security.password.Password;
@@ -107,6 +110,9 @@ public class ApacheSoapService extends ServiceImp {
   private Boolean perMessageDispatch;
   @InputFieldDefault(value = "false")
   private Boolean useFallbackTransformer;
+  @AdvancedConfig
+  @InputFieldDefault(value = "remove-all-metadata")
+  private MetadataFilter metadataFilter;
 
   private transient Transformer transformer;
   private transient DispatchBuilder dispatchBuilder;
@@ -200,6 +206,7 @@ public class ApacheSoapService extends ServiceImp {
   public void doService(AdaptrisMessage msg) throws ServiceException {
     try (InputStream in = msg.getInputStream(); OutputStream out = msg.getOutputStream()) {
       Dispatch<Source> dispatcher = dispatchBuilder.build(msg);
+      MetadataToRequestHeaders.register(metadataFilter().filter(msg), dispatcher);
       XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
       xmlInputFactory.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE, Boolean.TRUE);
       StaxSource source = new StaxSource(xmlInputFactory.createXMLStreamReader(in));
@@ -512,6 +519,27 @@ public class ApacheSoapService extends ServiceImp {
     return BooleanUtils.toBooleanDefaultIfNull(getUseFallbackTransformer(), false);
   }
 
+
+  public MetadataFilter getMetadataFilter() {
+    return metadataFilter;
+  }
+
+  /**
+   * Allows you to send arbitrary metadata as HTTP headers.
+   * <p>
+   * Uses {@link MetadataToRequestHeaders} to add the filtered metadata as HTTP Request headers.
+   * </p>
+   * 
+   * @param filter the filter to apply on the metadata; default is {@link RemoveAllMetadataFilter} if not explicitly specified.
+   */
+  public void setMetadataFilter(MetadataFilter filter) {
+    this.metadataFilter = filter;
+  }
+
+  protected MetadataFilter metadataFilter() {
+    return ObjectUtils.defaultIfNull(getMetadataFilter(), new RemoveAllMetadataFilter());
+  }
+
   @FunctionalInterface
   protected interface ConfigItem {
     String asString();
@@ -561,5 +589,4 @@ public class ApacheSoapService extends ServiceImp {
       return configureTimeouts(d);
     }
   }
-
 }

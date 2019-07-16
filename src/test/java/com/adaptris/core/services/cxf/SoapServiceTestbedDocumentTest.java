@@ -11,6 +11,7 @@ import com.adaptris.core.AdaptrisMessage;
 import com.adaptris.core.AdaptrisMessageFactory;
 import com.adaptris.core.BaseCase;
 import com.adaptris.core.ServiceCase;
+import com.adaptris.core.metadata.NoOpMetadataFilter;
 import com.adaptris.util.TimeInterval;
 
 public class SoapServiceTestbedDocumentTest extends BaseCase {
@@ -30,6 +31,18 @@ public class SoapServiceTestbedDocumentTest extends BaseCase {
     Assert.assertEquals("Mouse", val);
   }
   
+  public void testInvokeGetPerson_WithFilter() throws Exception {
+    AdaptrisMessage msg = AdaptrisMessageFactory.getDefaultInstance().newMessage(GET_PERSON_REQUEST);
+    ApacheSoapService service = create();
+    service.setMetadataFilter(new NoOpMetadataFilter());
+    ServiceCase.execute(service, msg);
+    Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(msg.getPayload()));
+    String val = doc.getElementsByTagName("firstname").item(0).getTextContent();
+    Assert.assertEquals("Mickey", val);
+    val = doc.getElementsByTagName("surname").item(0).getTextContent();
+    Assert.assertEquals("Mouse", val);
+  }
+
   private ApacheSoapService create() {
     ApacheSoapService service = new ApacheSoapService();
     service.setWsdlUrl("http://testbed.adaptris.net/web-service-test/webservicetestrpc?wsdl");
