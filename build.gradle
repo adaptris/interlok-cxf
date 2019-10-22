@@ -27,8 +27,8 @@ ext {
   componentName='Interlok Webservices via CXF'
   organizationName = "Adaptris Ltd"
   organizationUrl = "http://interlok.adaptris.net"
-  slf4jVersion = '1.7.27'
-  cxfVersion = '3.3.2'
+  slf4jVersion = '1.7.28'
+  cxfVersion = '3.3.3'
   log4j2Version = '2.12.1'
 }
 
