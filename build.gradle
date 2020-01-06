@@ -8,7 +8,7 @@ plugins {
   id 'jacoco'
   // Manage optional dependencies in maven pom.
   id 'nebula.optional-base' version '5.0.3'
-  id 'com.github.spotbugs' version '2.0.0'
+  id 'com.github.spotbugs' version '3.0.0'
 }
 
 ext {
@@ -27,8 +27,8 @@ ext {
   componentName='Interlok Webservices via CXF'
   organizationName = "Adaptris Ltd"
   organizationUrl = "http://interlok.adaptris.net"
-  slf4jVersion = '1.7.28'
-  cxfVersion = '3.3.3'
+  slf4jVersion = '1.7.29'
+  cxfVersion = '3.3.4'
   log4j2Version = '2.12.1'
 }
 
@@ -53,6 +53,24 @@ ext.unitTestProperties = { ->
     return file.getName()
   }
   return  "unit-tests.properties.template"
+}
+ext.gitBranchNameOrTimestamp = { branchName ->
+  if (branchName.equals("HEAD") || branchName.equals("develop") || branchName.startsWith("release")) {
+    return new Date().format('HH:mm:ss z');
+  }
+  return branchName;
+}
+
+ext.buildInfo = { ->
+   new ByteArrayOutputStream().withStream { os ->
+      exec {
+        executable = "git"
+        args = ["rev-parse", "--abbrev-ref", "HEAD"]
+        standardOutput = os
+      }
+      def branchName = os.toString().replaceAll("\r", "").replaceAll("\n", "").trim();
+      return gitBranchNameOrTimestamp(branchName);
+    }
 }
 
 sourceCompatibility = 1.8
@@ -153,6 +171,7 @@ task generateVersion {
       entry(key: 'artifactId', value: project.name)
       entry(key: 'build.version', value: project.version)
       entry(key: 'build.date', value: new Date().format('yyyy-MM-dd'))
+      entry(key: 'build.info', value: buildInfo())
     }
   }
 }
@@ -179,11 +198,6 @@ javadoc {
     title= componentName
   }
 }
-
-jacoco {
-  toolVersion="0.8.3"
-}
-
 jacocoTestReport {
     reports {
         xml.enabled true
