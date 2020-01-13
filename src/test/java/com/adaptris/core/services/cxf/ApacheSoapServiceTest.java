@@ -1,14 +1,14 @@
 package com.adaptris.core.services.cxf;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import java.io.ByteArrayInputStream;
 import java.util.concurrent.TimeUnit;
-
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.ws.soap.SOAPFaultException;
-
 import org.junit.Assert;
+import org.junit.Test;
 import org.w3c.dom.Document;
-
 import com.adaptris.core.AdaptrisMessage;
 import com.adaptris.core.AdaptrisMessageFactory;
 import com.adaptris.core.ServiceCase;
@@ -18,7 +18,6 @@ import com.adaptris.util.TimeInterval;
 
 public class ApacheSoapServiceTest extends ServiceCase {
 
-
   private static String FAULT_REQUEST = "<oxy:encounterError xmlns:oxy=\"http://ws.wst.adaptris.com/\"/>";
   private static String ECHO_REQUEST = "<oxy:performEcho xmlns:oxy=\"http://ws.wst.adaptris.com/\"><arg0>Hello World</arg0></oxy:performEcho>";
 
@@ -26,6 +25,7 @@ public class ApacheSoapServiceTest extends ServiceCase {
     super();
   }
 
+  @Test
   public void testWsdlUrl() throws Exception {
     ApacheSoapService service = new ApacheSoapService();
     assertNull(service.getWsdlUrl());
@@ -33,6 +33,7 @@ public class ApacheSoapServiceTest extends ServiceCase {
     assertEquals("http://localhost:8080/?wsdl", service.getWsdlUrl());
   }
 
+  @Test
   public void testPortName() throws Exception {
     ApacheSoapService service = new ApacheSoapService();
     assertNull(service.getPortName());
@@ -40,6 +41,7 @@ public class ApacheSoapServiceTest extends ServiceCase {
     assertEquals("Port", service.getPortName());
   }
 
+  @Test
   public void testServiceName() throws Exception {
     ApacheSoapService service = new ApacheSoapService();
     assertNull(service.getServiceName());
@@ -47,6 +49,7 @@ public class ApacheSoapServiceTest extends ServiceCase {
     assertEquals("ServiceName", service.getServiceName());
   }
 
+  @Test
   public void testNamespace() throws Exception {
     ApacheSoapService service = new ApacheSoapService();
     assertNull(service.getNamespace());
@@ -54,6 +57,7 @@ public class ApacheSoapServiceTest extends ServiceCase {
     assertEquals("ns", service.getNamespace());
   }
 
+  @Test
   public void testSoapAction() throws Exception {
     ApacheSoapService service = new ApacheSoapService();
     assertNull(service.getSoapAction());
@@ -62,6 +66,7 @@ public class ApacheSoapServiceTest extends ServiceCase {
   }
 
   @SuppressWarnings("deprecation")
+  @Test
   public void testWsdlPortUrl() throws Exception {
     ApacheSoapService service = new ApacheSoapService();
     assertNull(service.getWsdlPortUrl());
@@ -73,6 +78,7 @@ public class ApacheSoapServiceTest extends ServiceCase {
   }
 
   @SuppressWarnings("deprecation")
+  @Test
   public void testEndpointAddress() throws Exception {
     ApacheSoapService service = new ApacheSoapService();
     assertNull(service.getEndpointAddress());
@@ -83,6 +89,7 @@ public class ApacheSoapServiceTest extends ServiceCase {
     assertEquals("endpointAddress", service.endpointAddress());
   }
 
+  @Test
   public void testUsername() throws Exception {
     ApacheSoapService service = new ApacheSoapService();
     assertNull(service.getUsername());
@@ -90,6 +97,7 @@ public class ApacheSoapServiceTest extends ServiceCase {
     assertEquals("user", service.getUsername());
   }
 
+  @Test
   public void testPassword() throws Exception {
     ApacheSoapService service = new ApacheSoapService();
     assertNull(service.getPassword());
@@ -97,6 +105,7 @@ public class ApacheSoapServiceTest extends ServiceCase {
     assertEquals("pw", service.getPassword());
   }
 
+  @Test
   public void testConnectTimeout() throws Exception {
     ApacheSoapService service = new ApacheSoapService();
     TimeInterval t = new TimeInterval(10L, TimeUnit.MILLISECONDS);
@@ -105,6 +114,7 @@ public class ApacheSoapServiceTest extends ServiceCase {
     assertEquals(t, service.getConnectionTimeout());
   }
 
+  @Test
   public void testRequestTimeout() throws Exception {
     ApacheSoapService service = new ApacheSoapService();
     TimeInterval t = new TimeInterval(10L, TimeUnit.MILLISECONDS);
@@ -113,6 +123,7 @@ public class ApacheSoapServiceTest extends ServiceCase {
     assertEquals(t, service.getRequestTimeout());
   }
 
+  @Test
   public void testGenerateFault() throws Exception {
     AdaptrisMessage msg = AdaptrisMessageFactory.getDefaultInstance().newMessage(FAULT_REQUEST);
     try {
@@ -124,6 +135,7 @@ public class ApacheSoapServiceTest extends ServiceCase {
     }
   }
   
+  @Test
   public void testInvokeEchoService() throws Exception {
     ApacheSoapService service = LifecycleHelper.initAndStart(create());
     try {
@@ -138,6 +150,7 @@ public class ApacheSoapServiceTest extends ServiceCase {
     }
   }
 
+  @Test
   public void testInvokeEchoServicePerMessage() throws Exception {
     AdaptrisMessage msg = AdaptrisMessageFactory.getDefaultInstance().newMessage(ECHO_REQUEST);
     ApacheSoapService service = create();
@@ -176,5 +189,10 @@ public class ApacheSoapServiceTest extends ServiceCase {
     // service.setConnectTimeout(new TimeInterval(10L, "SECONDS"));
     // service.setRequestTimeout(new TimeInterval(30L, "SECONDS"));
     return service;
+  }
+
+  @Override
+  public boolean isAnnotatedForJunit4() {
+    return true;
   }
 }
