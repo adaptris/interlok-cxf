@@ -49,7 +49,6 @@ public class SoapServiceTestbedDocumentTest extends BaseCase {
     service.setNamespace("http://ws.wst.adaptris.com/");
     service.setServiceName("WebServiceMockRPCService");
     service.setPortName("WebServiceMockRPCPort");
-    service.setEnableDebug(true);
     service.setRequestTimeout(new TimeInterval(30L, "SECONDS"));
     return service;
   }

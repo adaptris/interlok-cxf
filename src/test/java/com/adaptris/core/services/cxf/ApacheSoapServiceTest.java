@@ -65,28 +65,12 @@ public class ApacheSoapServiceTest extends ServiceCase {
     assertEquals("stuff", service.getSoapAction());
   }
 
-  @SuppressWarnings("deprecation")
-  @Test
-  public void testWsdlPortUrl() throws Exception {
-    ApacheSoapService service = new ApacheSoapService();
-    assertNull(service.getWsdlPortUrl());
-    assertNull(service.getEndpointAddress());
-    service.setWsdlPortUrl("portUrl");
-    assertNull(service.getEndpointAddress());
-    assertEquals("portUrl", service.getWsdlPortUrl());
-    assertEquals("portUrl", service.endpointAddress());
-  }
-
-  @SuppressWarnings("deprecation")
   @Test
   public void testEndpointAddress() throws Exception {
     ApacheSoapService service = new ApacheSoapService();
     assertNull(service.getEndpointAddress());
-    assertNull(service.getWsdlPortUrl());
     service.setEndpointAddress("endpointAddress");
     assertEquals("endpointAddress", service.getEndpointAddress());
-    assertNull(service.getWsdlPortUrl());
-    assertEquals("endpointAddress", service.endpointAddress());
   }
 
   @Test
@@ -137,8 +121,10 @@ public class ApacheSoapServiceTest extends ServiceCase {
   
   @Test
   public void testInvokeEchoService() throws Exception {
-    ApacheSoapService service = LifecycleHelper.initAndStart(create());
+    ApacheSoapService service = create();
     try {
+      service.setUseFallbackTransformer(false);
+      LifecycleHelper.initAndStart(service);
       AdaptrisMessage msg = AdaptrisMessageFactory.getDefaultInstance().newMessage(ECHO_REQUEST);
       service.doService(AdaptrisMessageFactory.getDefaultInstance().newMessage(ECHO_REQUEST));
       service.doService(msg);
@@ -174,7 +160,6 @@ public class ApacheSoapServiceTest extends ServiceCase {
     service.setNamespace("http://ws.wst.adaptris.com/");
     service.setServiceName("WebServiceMockRPCService");
     service.setPortName("WebServiceMockRPCPort");
-    service.setEnableDebug(true);
     service.setRequestTimeout(new TimeInterval(30L, "SECONDS"));
     return service;
   }
