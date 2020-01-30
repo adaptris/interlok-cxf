@@ -120,6 +120,12 @@ public class ApacheSoapServiceTest extends ServiceCase {
   }
   
   @Test
+  public void testUseFallbackTransformer() {
+    ApacheSoapService service = new ApacheSoapService();
+    Assert.assertNull(service.getUseFallbackTransformer());
+  }
+  
+  @Test
   public void testInvokeEchoService() throws Exception {
     ApacheSoapService service = create();
     try {
