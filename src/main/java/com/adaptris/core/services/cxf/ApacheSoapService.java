@@ -435,7 +435,7 @@ public class ApacheSoapService extends ServiceImp {
   }
 
   private boolean useJavaFallBackTransformer() {
-    return BooleanUtils.toBooleanDefaultIfNull(getUseFallbackTransformer(), false);
+    return BooleanUtils.toBooleanDefaultIfNull(getUseFallbackTransformer(), true);
   }
 
 
