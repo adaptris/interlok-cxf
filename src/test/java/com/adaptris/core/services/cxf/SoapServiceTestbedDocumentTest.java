@@ -1,12 +1,10 @@
 package com.adaptris.core.services.cxf;
 
 import java.io.ByteArrayInputStream;
-
 import javax.xml.parsers.DocumentBuilderFactory;
-
 import org.junit.Assert;
+import org.junit.Test;
 import org.w3c.dom.Document;
-
 import com.adaptris.core.AdaptrisMessage;
 import com.adaptris.core.AdaptrisMessageFactory;
 import com.adaptris.core.BaseCase;
@@ -21,6 +19,7 @@ public class SoapServiceTestbedDocumentTest extends BaseCase {
   public SoapServiceTestbedDocumentTest() {
   }
   
+  @Test
   public void testInvokeGetPerson() throws Exception {
     AdaptrisMessage msg = AdaptrisMessageFactory.getDefaultInstance().newMessage(GET_PERSON_REQUEST);
     ServiceCase.execute(create(), msg);
@@ -31,6 +30,7 @@ public class SoapServiceTestbedDocumentTest extends BaseCase {
     Assert.assertEquals("Mouse", val);
   }
   
+  @Test
   public void testInvokeGetPerson_WithFilter() throws Exception {
     AdaptrisMessage msg = AdaptrisMessageFactory.getDefaultInstance().newMessage(GET_PERSON_REQUEST);
     ApacheSoapService service = create();
@@ -49,8 +49,12 @@ public class SoapServiceTestbedDocumentTest extends BaseCase {
     service.setNamespace("http://ws.wst.adaptris.com/");
     service.setServiceName("WebServiceMockRPCService");
     service.setPortName("WebServiceMockRPCPort");
-    service.setEnableDebug(true);
     service.setRequestTimeout(new TimeInterval(30L, "SECONDS"));
     return service;
+  }
+
+  @Override
+  public boolean isAnnotatedForJunit4() {
+    return true;
   }
 }

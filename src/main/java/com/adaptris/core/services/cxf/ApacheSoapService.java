@@ -2,12 +2,10 @@ package com.adaptris.core.services.cxf;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
-
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.transform.Source;
@@ -17,20 +15,15 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.ws.BindingProvider;
 import javax.xml.ws.Dispatch;
 import javax.xml.ws.Service;
-
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.cxf.BusFactory;
-import org.apache.cxf.interceptor.LoggingOutInterceptor;
 import org.apache.cxf.staxutils.StaxSource;
-
 import com.adaptris.annotation.AdapterComponent;
 import com.adaptris.annotation.AdvancedConfig;
 import com.adaptris.annotation.ComponentProfile;
 import com.adaptris.annotation.DisplayOrder;
 import com.adaptris.annotation.InputFieldDefault;
 import com.adaptris.annotation.InputFieldHint;
-import com.adaptris.annotation.Removal;
 import com.adaptris.core.AdaptrisMessage;
 import com.adaptris.core.CoreException;
 import com.adaptris.core.ServiceException;
@@ -88,10 +81,6 @@ public class ApacheSoapService extends ServiceImp {
   @AdvancedConfig
   private String soapAction;
   @AdvancedConfig
-  @Deprecated
-  @Removal(version = "3.10.0")
-  private String wsdlPortUrl;
-  @AdvancedConfig
   private String endpointAddress;
   private String username;
   @InputFieldHint(style = "PASSWORD", external = true)
@@ -100,11 +89,6 @@ public class ApacheSoapService extends ServiceImp {
   private TimeInterval connectionTimeout;
   @AdvancedConfig
   private TimeInterval requestTimeout;
-  @AdvancedConfig
-  @InputFieldDefault(value = "false")
-  @Deprecated
-  @Removal(version = "3.10.0")
-  private Boolean enableDebug;
   @AdvancedConfig
   @InputFieldDefault(value = "false")
   private Boolean perMessageDispatch;
@@ -181,9 +165,6 @@ public class ApacheSoapService extends ServiceImp {
   protected void initService() throws CoreException {
     try {
       URL wsdlURL = new URL(getWsdlUrl());
-      if (debugEnabled()) {
-        BusFactory.getDefaultBus().getOutInterceptors().add(new LoggingOutInterceptor());
-      }
       Service service = Service.create(wsdlURL, new QName(getNamespace(), getServiceName()));
       if (perMessageDispatch()) {
         dispatchBuilder = new PerMessageDispatcher(service);
@@ -318,32 +299,6 @@ public class ApacheSoapService extends ServiceImp {
     this.soapAction = soapAction;
   }
 
-  /**
-   * This optional property may be used to specify a different service address to that specified in the WSDL.
-   * 
-   * @return wsdlPortUrl
-   * @deprecated since 3.8.2; use {@link #getEndpointAddress()} instead as this matches the
-   *             {@code BindingProvider#ENDPOINT_ADDRESS_PROPERTY} better.
-   */
-  @Deprecated
-  @Removal(version = "3.10.0")
-  public String getWsdlPortUrl() {
-    return wsdlPortUrl;
-  }
-
-  /**
-   * This optional property may be used to specify a different service address to that specified in the WSDL.
-   * 
-   * @param wsdlPortUrl
-   * @deprecated since 3.8.2; use {@link #setEndpointAddress(String)} instead as this matches the
-   *             {@code BindingProvider#ENDPOINT_ADDRESS_PROPERTY} better.
-   */
-  @Deprecated
-  @Removal(version = "3.10.0")
-  public void setWsdlPortUrl(String wsdlPortUrl) {
-    this.wsdlPortUrl = wsdlPortUrl;
-  }
-
   public String getEndpointAddress() {
     return endpointAddress;
   }
@@ -353,43 +308,7 @@ public class ApacheSoapService extends ServiceImp {
   }
 
   protected String endpointAddress() {
-    if (isNotEmpty(getWsdlPortUrl())) {
-      log.warn("Use of deprecated wsdl-port-url; use endpoint-address instead");
-      return getWsdlPortUrl();
-    }
     return getEndpointAddress();
-  }
-
-
-  /**
-   * Provide additional web service debugging information.
-   * 
-   * @return enableDebug true = provide web service debug information
-   * @deprecated since 3.8.2; use log4j/slf4j/java.util.logging to get debug logging c.f. <a
-   *             href="http://cxf.apache.org/docs/general-cxf-logging.html>CXF Logging</a>
-   */
-  @Deprecated
-  @Removal(version = "3.10.0")
-  public Boolean getEnableDebug() {
-    return enableDebug;
-  }
-
-  /**
-   * Whether to provide additional debugging information.
-   * 
-   * @param b true = provide web service debug information
-   * @deprecated since 3.8.2; use log4j/slf4j/java.util.logging to get debug logging c.f. <a
-   *             href="http://cxf.apache.org/docs/general-cxf-logging.html>CXF Logging</a>
-   */
-  @Deprecated
-  @Removal(version = "3.10.0")
-  public void setEnableDebug(Boolean b) {
-    this.enableDebug = b;
-  }
-
-  @Deprecated
-  private boolean debugEnabled() {
-    return BooleanUtils.toBooleanDefaultIfNull(getEnableDebug(), false);
   }
 
   /**
@@ -516,7 +435,7 @@ public class ApacheSoapService extends ServiceImp {
   }
 
   private boolean useJavaFallBackTransformer() {
-    return BooleanUtils.toBooleanDefaultIfNull(getUseFallbackTransformer(), false);
+    return BooleanUtils.toBooleanDefaultIfNull(getUseFallbackTransformer(), true);
   }
 
 
