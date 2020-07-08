@@ -52,9 +52,9 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
  * If you wish to use woodstox, then explicitly set the property to your preferred value (probably <code>false</code>)as the service
  * will only attempt to set it if it has not already been set.
  * </p>
- * 
+ *
  * @config apache-cxf-soap-service
- * 
+ *
  */
 @XStreamAlias("apache-cxf-soap-service")
 @AdapterComponent
@@ -92,7 +92,7 @@ public class ApacheSoapService extends ServiceImp {
   @AdvancedConfig
   @InputFieldDefault(value = "false")
   private Boolean perMessageDispatch;
-  @InputFieldDefault(value = "false")
+  @InputFieldDefault(value = "true")
   private Boolean useFallbackTransformer;
   @AdvancedConfig
   @InputFieldDefault(value = "remove-all-metadata")
@@ -212,7 +212,7 @@ public class ApacheSoapService extends ServiceImp {
 
   /**
    * The URL from which to download the WSDL.
-   * 
+   *
    * @return wsdlUrl
    */
   public String getWsdlUrl() {
@@ -221,7 +221,7 @@ public class ApacheSoapService extends ServiceImp {
 
   /**
    * The URL from which to download the WSDL.
-   * 
+   *
    * @param wsdlUrl
    */
   public void setWsdlUrl(String wsdlUrl) {
@@ -230,7 +230,7 @@ public class ApacheSoapService extends ServiceImp {
 
   /**
    * The port name for the WSDL.
-   * 
+   *
    * @return portName
    */
   public String getPortName() {
@@ -239,7 +239,7 @@ public class ApacheSoapService extends ServiceImp {
 
   /**
    * The port name for the WSDL.
-   * 
+   *
    * @param portName
    */
   public void setPortName(String portName) {
@@ -248,7 +248,7 @@ public class ApacheSoapService extends ServiceImp {
 
   /**
    * The name of the Service to be invoked.
-   * 
+   *
    * @return serviceName
    */
   public String getServiceName() {
@@ -257,7 +257,7 @@ public class ApacheSoapService extends ServiceImp {
 
   /**
    * The name of the Service to be invoked.
-   * 
+   *
    * @param serviceName
    */
   public void setServiceName(String serviceName) {
@@ -266,7 +266,7 @@ public class ApacheSoapService extends ServiceImp {
 
   /**
    * The namespace of this Service.
-   * 
+   *
    */
   public String getNamespace() {
     return namespace;
@@ -274,7 +274,7 @@ public class ApacheSoapService extends ServiceImp {
 
   /**
    * The namespace of this Service.
-   * 
+   *
    * @param namespace
    */
   public void setNamespace(String namespace) {
@@ -283,7 +283,7 @@ public class ApacheSoapService extends ServiceImp {
 
   /**
    * The SOAP Action to be used.
-   * 
+   *
    * @return soapAction
    */
   public String getSoapAction() {
@@ -292,7 +292,7 @@ public class ApacheSoapService extends ServiceImp {
 
   /**
    * The SOAP Action to be used.
-   * 
+   *
    * @param soapAction
    */
   public void setSoapAction(String soapAction) {
@@ -313,7 +313,7 @@ public class ApacheSoapService extends ServiceImp {
 
   /**
    * The time to wait for a connection to this service invocation.
-   * 
+   *
    * @return connectionTimeout
    */
   public TimeInterval getConnectionTimeout() {
@@ -322,7 +322,7 @@ public class ApacheSoapService extends ServiceImp {
 
   /**
    * The time to wait for a connection to this service invocation.
-   * 
+   *
    * @param ti the connect timeout, if unspecified defaults to 10 seconds
    */
   public void setConnectTimeout(TimeInterval ti) {
@@ -331,7 +331,7 @@ public class ApacheSoapService extends ServiceImp {
 
   /**
    * The time to wait for a request completion for this service invocation.
-   * 
+   *
    * @return requestTimeout
    */
   public TimeInterval getRequestTimeout() {
@@ -340,7 +340,7 @@ public class ApacheSoapService extends ServiceImp {
 
   /**
    * The time to wait for a request completion for this service invocation.
-   * 
+   *
    * @param rt the request timeout, if unspecified defaults to 50 seconds.
    */
   public void setRequestTimeout(TimeInterval rt) {
@@ -349,7 +349,7 @@ public class ApacheSoapService extends ServiceImp {
 
   /**
    * Optional username for HTTP basic authentication.
-   * 
+   *
    * @return username
    */
   public String getUsername() {
@@ -358,7 +358,7 @@ public class ApacheSoapService extends ServiceImp {
 
   /**
    * Optional username for HTTP basic authentication.
-   * 
+   *
    * @param username
    */
   public void setUsername(String username) {
@@ -367,7 +367,7 @@ public class ApacheSoapService extends ServiceImp {
 
   /**
    * Optional password for HTTP basic authentication.
-   * 
+   *
    */
   public String getPassword() {
     return password;
@@ -375,7 +375,7 @@ public class ApacheSoapService extends ServiceImp {
 
   /**
    * Optional password for HTTP basic authentication.
-   * 
+   *
    * @param pw the password which may be encoded by {@link Password#encode(String, String)}
    */
   public void setPassword(String pw) {
@@ -401,7 +401,7 @@ public class ApacheSoapService extends ServiceImp {
    * Note that setting this to true, will cause a new {@code Dispatch} object to be created during every
    * {@link #doService(AdaptrisMessage)} method, this may incur a high cost of initialisation.
    * </p>
-   * 
+   *
    * @param b true to enable, default is false.
    */
   public void setPerMessageDispatch(Boolean b) {
@@ -425,8 +425,8 @@ public class ApacheSoapService extends ServiceImp {
    * this is the case for you, then set this to be true; and you will use the {@value #FALLBACK_TRANSFORMER_FACTORY_IMPL} as the
    * transformer factory instead.
    * </p>
-   * 
-   * @param b true to use {@value #FALLBACK_TRANSFORMER_FACTORY_IMPL} as the {@link TransformerFactory}; false if not explicitly
+   *
+   * @param b true to use {@value #FALLBACK_TRANSFORMER_FACTORY_IMPL} as the {@link TransformerFactory}; true if not explicitly
    *        configured.
    * @since 3.9.1
    */
@@ -448,7 +448,7 @@ public class ApacheSoapService extends ServiceImp {
    * <p>
    * Uses {@link MetadataToRequestHeaders} to add the filtered metadata as HTTP Request headers.
    * </p>
-   * 
+   *
    * @param filter the filter to apply on the metadata; default is {@link RemoveAllMetadataFilter} if not explicitly specified.
    */
   public void setMetadataFilter(MetadataFilter filter) {
