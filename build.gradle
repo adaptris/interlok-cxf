@@ -29,7 +29,7 @@ ext {
   organizationName = "Adaptris Ltd"
   organizationUrl = "http://interlok.adaptris.net"
   slf4jVersion = '1.7.30'
-  cxfVersion = '3.3.7'
+  cxfVersion = '3.4.0'
 }
 
 if (JavaVersion.current().isJava8Compatible()) {
