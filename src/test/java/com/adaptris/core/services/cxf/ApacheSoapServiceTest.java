@@ -14,6 +14,7 @@ import org.w3c.dom.Document;
 import com.adaptris.core.AdaptrisMessage;
 import com.adaptris.core.AdaptrisMessageFactory;
 import com.adaptris.core.ServiceException;
+import com.adaptris.core.metadata.RemoveAllMetadataFilter;
 import com.adaptris.core.stubs.DefectiveMessageFactory;
 import com.adaptris.core.stubs.DefectiveMessageFactory.WhenToBreak;
 import com.adaptris.core.util.LifecycleHelper;
@@ -184,6 +185,7 @@ public class ApacheSoapServiceTest extends ExampleServiceCase {
     ApacheSoapService service = createDataAccessComWsdl();
     try {
       service.setUseFallbackTransformer(false);
+      service.setMetadataFilter(new RemoveAllMetadataFilter());
       service.setPerMessageDispatch(true);
       LifecycleHelper.initAndStart(service);
       service.doService(AdaptrisMessageFactory.getDefaultInstance().newMessage(INVERT_PAYLOAD));
