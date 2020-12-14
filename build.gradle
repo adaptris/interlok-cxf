@@ -255,6 +255,8 @@ publishing {
         properties.appendNode("target", "3.8.0+")
         properties.appendNode("tags", "webservices")
         properties.appendNode("license", "false")
+        properties.appendNode("repository", "https://github.com/adaptris/interlok-cxf")
+        properties.appendNode("readme", "https://github.com/adaptris/interlok-cxf/raw/develop/README.md")
       }
     }
   }
