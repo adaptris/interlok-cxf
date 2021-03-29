@@ -28,11 +28,15 @@ import com.adaptris.util.TimeInterval;
 
 public class ApacheSoapServiceTest extends ExampleServiceCase {
 
-
   private static String INVERT_PAYLOAD =
       "<web:InvertStringCase xmlns:web=\"http://www.dataaccess.com/webservicesserver/\">\n"
           + "<web:sAString>hello world</web:sAString>\n"
           + "</web:InvertStringCase>";
+
+  private static String CONVERT_PAYLOAD =
+      "<CelsiusToFahrenheit xmlns=\"http://webservices.daehosting.com/temperature\">\n"
+          + "  <nCelsius>0</nCelsius>\n"
+          + "</CelsiusToFahrenheit>";
 
   private static String FAULT_REQUEST = "<oxy:encounterError xmlns:oxy=\"http://ws.wst.adaptris.com/\"/>";
   private static String ECHO_REQUEST = "<oxy:performEcho xmlns:oxy=\"http://ws.wst.adaptris.com/\"><arg0>Hello World</arg0></oxy:performEcho>";
@@ -202,12 +206,39 @@ public class ApacheSoapServiceTest extends ExampleServiceCase {
     }
   }
 
-  @Ignore // http://www.dataaccess.com/webservicesserver is down
+  @Test
+  public void testDataAccess_Convert() throws Exception {
+    AdaptrisMessage msg = AdaptrisMessageFactory.getDefaultInstance().newMessage(CONVERT_PAYLOAD);
+
+    ApacheSoapService service = createDaehostingComWsdl();
+    service.setUseFallbackTransformer(true);
+    execute(service, msg);
+    assertTrue(msg.getContent().contains("32"));
+  }
+
+  @Test
+  public void testDataAccess_Convert_PerMessage() throws Exception {
+    AdaptrisMessage msg = AdaptrisMessageFactory.getDefaultInstance().newMessage(CONVERT_PAYLOAD);
+
+    ApacheSoapService service = createDaehostingComWsdl();
+    try {
+      service.setUseFallbackTransformer(false);
+      service.setMetadataFilter(new RemoveAllMetadataFilter());
+      service.setPerMessageDispatch(true);
+      LifecycleHelper.initAndStart(service);
+      service.doService(AdaptrisMessageFactory.getDefaultInstance().newMessage(CONVERT_PAYLOAD));
+      service.doService(msg);
+      assertTrue(msg.getContent().contains("32"));
+    } finally {
+      LifecycleHelper.stopAndClose(service);
+    }
+  }
+
   @Test(expected = ServiceException.class)
   public void testWithException() throws Exception {
 
     AdaptrisMessage msg = new DefectiveMessageFactory(WhenToBreak.INPUT).newMessage();
-    ApacheSoapService service = createDataAccessComWsdl();
+    ApacheSoapService service = createDaehostingComWsdl();
     try {
       service.setUseFallbackTransformer(true);
       LifecycleHelper.initAndStart(service);
@@ -224,6 +255,17 @@ public class ApacheSoapServiceTest extends ExampleServiceCase {
     service.setNamespace("http://www.dataaccess.com/webservicesserver/");
     service.setServiceName("TextCasing");
     service.setPortName("TextCasingSoap");
+    service.setRequestTimeout(new TimeInterval(30L, "SECONDS"));
+    return service;
+  }
+
+  private ApacheSoapService createDaehostingComWsdl() {
+    ApacheSoapService service = new ApacheSoapService();
+    service.setWsdlUrl("http://webservices.daehosting.com/services/TemperatureConversions.wso?WSDL");
+
+    service.setNamespace("http://webservices.daehosting.com/temperature");
+    service.setServiceName("TemperatureConversions");
+    service.setPortName("TemperatureConversionsSoap");
     service.setRequestTimeout(new TimeInterval(30L, "SECONDS"));
     return service;
   }
