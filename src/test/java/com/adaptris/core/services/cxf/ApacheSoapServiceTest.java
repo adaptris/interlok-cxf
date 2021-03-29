@@ -3,14 +3,19 @@ package com.adaptris.core.services.cxf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+
 import java.io.ByteArrayInputStream;
 import java.util.concurrent.TimeUnit;
+
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.ws.soap.SOAPFaultException;
+
 import org.junit.Assert;
 import org.junit.Assume;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.w3c.dom.Document;
+
 import com.adaptris.core.AdaptrisMessage;
 import com.adaptris.core.AdaptrisMessageFactory;
 import com.adaptris.core.ServiceException;
@@ -27,7 +32,7 @@ public class ApacheSoapServiceTest extends ExampleServiceCase {
   private static String INVERT_PAYLOAD =
       "<web:InvertStringCase xmlns:web=\"http://www.dataaccess.com/webservicesserver/\">\n"
           + "<web:sAString>hello world</web:sAString>\n"
-    + "</web:InvertStringCase>";
+          + "</web:InvertStringCase>";
 
   private static String FAULT_REQUEST = "<oxy:encounterError xmlns:oxy=\"http://ws.wst.adaptris.com/\"/>";
   private static String ECHO_REQUEST = "<oxy:performEcho xmlns:oxy=\"http://ws.wst.adaptris.com/\"><arg0>Hello World</arg0></oxy:performEcho>";
@@ -167,7 +172,7 @@ public class ApacheSoapServiceTest extends ExampleServiceCase {
     }
   }
 
-
+  @Ignore // http://www.dataaccess.com/webservicesserver is down
   @Test
   public void testDataAccess_InvertCase() throws Exception {
     AdaptrisMessage msg = AdaptrisMessageFactory.getDefaultInstance().newMessage(INVERT_PAYLOAD);
@@ -178,6 +183,7 @@ public class ApacheSoapServiceTest extends ExampleServiceCase {
     assertTrue(msg.getContent().contains("HELLO WORLD"));
   }
 
+  @Ignore // http://www.dataaccess.com/webservicesserver is down
   @Test
   public void testDataAccess_InvertCase_PerMessage() throws Exception {
     AdaptrisMessage msg = AdaptrisMessageFactory.getDefaultInstance().newMessage(INVERT_PAYLOAD);
@@ -196,6 +202,7 @@ public class ApacheSoapServiceTest extends ExampleServiceCase {
     }
   }
 
+  @Ignore // http://www.dataaccess.com/webservicesserver is down
   @Test(expected = ServiceException.class)
   public void testWithException() throws Exception {
 

@@ -2,10 +2,12 @@ package com.adaptris.core.services.cxf;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
+
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.transform.Source;
@@ -15,9 +17,11 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.ws.BindingProvider;
 import javax.xml.ws.Dispatch;
 import javax.xml.ws.Service;
+
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.cxf.staxutils.StaxSource;
+
 import com.adaptris.annotation.AdapterComponent;
 import com.adaptris.annotation.AdvancedConfig;
 import com.adaptris.annotation.ComponentProfile;
@@ -161,7 +165,6 @@ public class ApacheSoapService extends ServiceImp {
   }
 
   @Override
-  @SuppressWarnings("deprecation")
   protected void initService() throws CoreException {
     try {
       URL wsdlURL = new URL(getWsdlUrl());
@@ -326,7 +329,7 @@ public class ApacheSoapService extends ServiceImp {
    * @param ti the connect timeout, if unspecified defaults to 10 seconds
    */
   public void setConnectTimeout(TimeInterval ti) {
-    this.connectionTimeout = ti;
+    connectionTimeout = ti;
   }
 
   /**
@@ -344,7 +347,7 @@ public class ApacheSoapService extends ServiceImp {
    * @param rt the request timeout, if unspecified defaults to 50 seconds.
    */
   public void setRequestTimeout(TimeInterval rt) {
-    this.requestTimeout = rt;
+    requestTimeout = rt;
   }
 
   /**
@@ -379,7 +382,7 @@ public class ApacheSoapService extends ServiceImp {
    * @param pw the password which may be encoded by {@link Password#encode(String, String)}
    */
   public void setPassword(String pw) {
-    this.password = pw;
+    password = pw;
   }
 
   private int connectTimeout() {
@@ -405,7 +408,7 @@ public class ApacheSoapService extends ServiceImp {
    * @param b true to enable, default is false.
    */
   public void setPerMessageDispatch(Boolean b) {
-    this.perMessageDispatch = b;
+    perMessageDispatch = b;
   }
 
   private boolean perMessageDispatch() {
@@ -431,7 +434,7 @@ public class ApacheSoapService extends ServiceImp {
    * @since 3.9.1
    */
   public void setUseFallbackTransformer(Boolean b) {
-    this.useFallbackTransformer = b;
+    useFallbackTransformer = b;
   }
 
   private boolean useJavaFallBackTransformer() {
@@ -452,7 +455,7 @@ public class ApacheSoapService extends ServiceImp {
    * @param filter the filter to apply on the metadata; default is {@link RemoveAllMetadataFilter} if not explicitly specified.
    */
   public void setMetadataFilter(MetadataFilter filter) {
-    this.metadataFilter = filter;
+    metadataFilter = filter;
   }
 
   protected MetadataFilter metadataFilter() {
@@ -500,7 +503,7 @@ public class ApacheSoapService extends ServiceImp {
     @Override
     public Dispatch<Source> build(AdaptrisMessage msg) throws Exception {
       final String pw = Password.decode(msg.resolve(ExternalResolver.resolve(getPassword())));
-      Dispatch d = service.createDispatch(new QName(getNamespace(), getPortName()), Source.class, Service.Mode.PAYLOAD);
+      Dispatch<Source> d = service.createDispatch(new QName(getNamespace(), getPortName()), Source.class, Service.Mode.PAYLOAD);
       DispatchConfig.SoapAction.apply(d, () -> { return msg.resolve(getSoapAction()); });
       DispatchConfig.EndpointAddress.apply(d, () -> { return msg.resolve(endpointAddress()); });
       DispatchConfig.Username.apply(d, () -> { return msg.resolve(getUsername()); });
