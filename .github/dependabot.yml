@@ -14,6 +14,7 @@ registries:
 updates:
   - package-ecosystem: "gradle"
     directory: "/"
+    open-pull-requests-limit: 20
     registries:
       - "public"
       - "interlok"
@@ -29,6 +30,7 @@ updates:
       - higgyfella
   - package-ecosystem: "github-actions"
     directory: "/"
+    open-pull-requests-limit: 20
     schedule:
       interval: "weekly"
     allow:
