@@ -28,7 +28,7 @@ ext {
   componentDesc="Execute webservices using Apache CXF"
   organizationName = "Adaptris Ltd"
   organizationUrl = "http://interlok.adaptris.net"
-  slf4jVersion = '1.7.36'
+  slf4jVersion = '2.0.0'
   mockitoVersion = '4.8.0'
   cxfVersion = '3.5.3'
 }
