@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+  <suppress>
+    <notes><![CDATA[
+    file name: cxf-rt-bindings-soap-3.5.5.jar
+    False positive as the vulnerability is in apache soap project and not cxf-rt-bindings-soap
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.cxf/cxf\-rt\-bindings\-soap@.*$</packageUrl>
+    <cve>CVE-2022-40705</cve>
+  </suppress>
+</suppressions>
