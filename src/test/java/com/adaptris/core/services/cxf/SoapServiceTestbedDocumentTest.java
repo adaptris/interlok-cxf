@@ -1,12 +1,16 @@
 package com.adaptris.core.services.cxf;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+
 import java.io.ByteArrayInputStream;
+
 import javax.xml.parsers.DocumentBuilderFactory;
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Test;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
+
 import com.adaptris.core.AdaptrisMessage;
 import com.adaptris.core.AdaptrisMessageFactory;
 import com.adaptris.core.metadata.NoOpMetadataFilter;
@@ -20,10 +24,10 @@ public class SoapServiceTestbedDocumentTest {
   public SoapServiceTestbedDocumentTest() {
   }
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     // Skip testbed tests.
-    Assume.assumeTrue(false);
+    assumeTrue(false);
   }
 
   @Test
@@ -32,9 +36,9 @@ public class SoapServiceTestbedDocumentTest {
     ExampleServiceCase.execute(create(), msg);
     Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(msg.getPayload()));
     String val = doc.getElementsByTagName("firstname").item(0).getTextContent();
-    Assert.assertEquals("Mickey", val);
+    assertEquals("Mickey", val);
     val = doc.getElementsByTagName("surname").item(0).getTextContent();
-    Assert.assertEquals("Mouse", val);
+    assertEquals("Mouse", val);
   }
 
   @Test
@@ -45,9 +49,9 @@ public class SoapServiceTestbedDocumentTest {
     ExampleServiceCase.execute(service, msg);
     Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(msg.getPayload()));
     String val = doc.getElementsByTagName("firstname").item(0).getTextContent();
-    Assert.assertEquals("Mickey", val);
+    assertEquals("Mickey", val);
     val = doc.getElementsByTagName("surname").item(0).getTextContent();
-    Assert.assertEquals("Mouse", val);
+    assertEquals("Mouse", val);
   }
 
   private ApacheSoapService create() {
@@ -59,4 +63,5 @@ public class SoapServiceTestbedDocumentTest {
     service.setRequestTimeout(new TimeInterval(30L, "SECONDS"));
     return service;
   }
+
 }

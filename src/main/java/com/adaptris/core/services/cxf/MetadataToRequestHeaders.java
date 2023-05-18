@@ -15,11 +15,10 @@ import com.adaptris.core.MetadataElement;
 
 /**
  * Handler implementation that just adds key-value pairs to the context request headers.
- * 
+ *
  */
 @FunctionalInterface
 public interface MetadataToRequestHeaders extends Handler {
-
 
   @Override
   default boolean handleFault(MessageContext context) {
@@ -31,8 +30,8 @@ public interface MetadataToRequestHeaders extends Handler {
     // Do nothing
   }
 
-  static Map<String, List> getRequestHeaders(MessageContext context) {
-    Map<String, List> headers = (Map<String, List>) context.get(MessageContext.HTTP_REQUEST_HEADERS);
+  static Map<String, List<?>> getRequestHeaders(MessageContext context) {
+    Map<String, List<?>> headers = (Map<String, List<?>>) context.get(MessageContext.HTTP_REQUEST_HEADERS);
     if (headers == null) {
       headers = new HashMap<>();
       context.put(MessageContext.HTTP_REQUEST_HEADERS, headers);
@@ -40,7 +39,7 @@ public interface MetadataToRequestHeaders extends Handler {
     return headers;
   }
 
-  static void register(Dispatch dispatch, MetadataToRequestHeaders handler) {
+  static void register(Dispatch<?> dispatch, MetadataToRequestHeaders handler) {
     List<Handler> handlers = dispatch.getBinding().getHandlerChain();
     if (handlers == null) {
       handlers = Arrays.asList(handler);
@@ -50,11 +49,11 @@ public interface MetadataToRequestHeaders extends Handler {
     dispatch.getBinding().setHandlerChain(handlers);
   }
 
-  static void register(final Collection<MetadataElement> metadata, final Dispatch dispatch) {
-    register(dispatch,  (context) -> {
+  static void register(final Collection<MetadataElement> metadata, final Dispatch<?> dispatch) {
+    register(dispatch, (context) -> {
       try {
-        Map<String, List> headers = getRequestHeaders(context);
-        for (MetadataElement e: metadata) {
+        Map<String, List<?>> headers = getRequestHeaders(context);
+        for (MetadataElement e : metadata) {
           headers.put(e.getKey(), Collections.singletonList(e.getValue()));
         }
       } catch (Exception ce) {
