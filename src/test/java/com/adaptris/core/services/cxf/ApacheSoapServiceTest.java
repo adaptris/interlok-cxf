@@ -1,8 +1,11 @@
 package com.adaptris.core.services.cxf;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.ByteArrayInputStream;
 import java.util.concurrent.TimeUnit;
@@ -10,10 +13,8 @@ import java.util.concurrent.TimeUnit;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.ws.soap.SOAPFaultException;
 
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 
 import com.adaptris.core.AdaptrisMessage;
@@ -28,15 +29,11 @@ import com.adaptris.util.TimeInterval;
 
 public class ApacheSoapServiceTest extends ExampleServiceCase {
 
-  private static String INVERT_PAYLOAD =
-      "<web:InvertStringCase xmlns:web=\"http://www.dataaccess.com/webservicesserver/\">\n"
-          + "<web:sAString>hello world</web:sAString>\n"
-          + "</web:InvertStringCase>";
+  private static String INVERT_PAYLOAD = "<web:InvertStringCase xmlns:web=\"http://www.dataaccess.com/webservicesserver/\">\n"
+      + "<web:sAString>hello world</web:sAString>\n" + "</web:InvertStringCase>";
 
-  private static String CONVERT_PAYLOAD =
-      "<CelsiusToFahrenheit xmlns=\"http://webservices.daehosting.com/temperature\">\n"
-          + "  <nCelsius>0</nCelsius>\n"
-          + "</CelsiusToFahrenheit>";
+  private static String CONVERT_PAYLOAD = "<CelsiusToFahrenheit xmlns=\"http://webservices.daehosting.com/temperature\">\n"
+      + "  <nCelsius>0</nCelsius>\n" + "</CelsiusToFahrenheit>";
 
   private static String FAULT_REQUEST = "<oxy:encounterError xmlns:oxy=\"http://ws.wst.adaptris.com/\"/>";
   private static String ECHO_REQUEST = "<oxy:performEcho xmlns:oxy=\"http://ws.wst.adaptris.com/\"><arg0>Hello World</arg0></oxy:performEcho>";
@@ -128,17 +125,17 @@ public class ApacheSoapServiceTest extends ExampleServiceCase {
     AdaptrisMessage msg = AdaptrisMessageFactory.getDefaultInstance().newMessage(FAULT_REQUEST);
     try {
       execute(create(), msg);
-      Assert.fail("Should have received a SOAPFault");
+      fail("Should have received a SOAPFault");
     } catch (ServiceException e) {
-      Assert.assertTrue(e.getCause() instanceof SOAPFaultException);
-      Assert.assertTrue(e.getCause().getMessage().contains("We at Adaptris do no support this operation"));
+      assertTrue(e.getCause() instanceof SOAPFaultException);
+      assertTrue(e.getCause().getMessage().contains("We at Adaptris do no support this operation"));
     }
   }
 
   @Test
   public void testUseFallbackTransformer() {
     ApacheSoapService service = new ApacheSoapService();
-    Assert.assertNull(service.getUseFallbackTransformer());
+    assertNull(service.getUseFallbackTransformer());
   }
 
   @Test
@@ -152,7 +149,7 @@ public class ApacheSoapServiceTest extends ExampleServiceCase {
       service.doService(msg);
       Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(msg.getPayload()));
       String val = doc.getElementsByTagName("return").item(0).getTextContent();
-      Assert.assertEquals("Echoing data: Hello World", val);
+      assertEquals("Echoing data: Hello World", val);
     } finally {
       LifecycleHelper.stopAndClose(service);
     }
@@ -170,13 +167,13 @@ public class ApacheSoapServiceTest extends ExampleServiceCase {
       service.doService(msg);
       Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(msg.getPayload()));
       String val = doc.getElementsByTagName("return").item(0).getTextContent();
-      Assert.assertEquals("Echoing data: Hello World", val);
+      assertEquals("Echoing data: Hello World", val);
     } finally {
       LifecycleHelper.stopAndClose(service);
     }
   }
 
-  @Ignore // http://www.dataaccess.com/webservicesserver is down
+  @Disabled // http://www.dataaccess.com/webservicesserver is down
   @Test
   public void testDataAccess_InvertCase() throws Exception {
     AdaptrisMessage msg = AdaptrisMessageFactory.getDefaultInstance().newMessage(INVERT_PAYLOAD);
@@ -187,7 +184,7 @@ public class ApacheSoapServiceTest extends ExampleServiceCase {
     assertTrue(msg.getContent().contains("HELLO WORLD"));
   }
 
-  @Ignore // http://www.dataaccess.com/webservicesserver is down
+  @Disabled // http://www.dataaccess.com/webservicesserver is down
   @Test
   public void testDataAccess_InvertCase_PerMessage() throws Exception {
     AdaptrisMessage msg = AdaptrisMessageFactory.getDefaultInstance().newMessage(INVERT_PAYLOAD);
@@ -234,7 +231,7 @@ public class ApacheSoapServiceTest extends ExampleServiceCase {
     }
   }
 
-  @Test(expected = ServiceException.class)
+  @Test
   public void testWithException() throws Exception {
 
     AdaptrisMessage msg = new DefectiveMessageFactory(WhenToBreak.INPUT).newMessage();
@@ -242,7 +239,8 @@ public class ApacheSoapServiceTest extends ExampleServiceCase {
     try {
       service.setUseFallbackTransformer(true);
       LifecycleHelper.initAndStart(service);
-      service.doService(msg);
+
+      assertThrows(ServiceException.class, () -> service.doService(msg));
     } finally {
       LifecycleHelper.stopAndClose(service);
     }
@@ -271,7 +269,7 @@ public class ApacheSoapServiceTest extends ExampleServiceCase {
   }
 
   private ApacheSoapService create() {
-    Assume.assumeTrue(false);
+    assumeTrue(false);
     ApacheSoapService service = new ApacheSoapService();
     service.setWsdlUrl("http://testbed.adaptris.net/web-service-test/webservicetestrpc?wsdl");
     service.setNamespace("http://ws.wst.adaptris.com/");
@@ -292,4 +290,5 @@ public class ApacheSoapServiceTest extends ExampleServiceCase {
     // service.setRequestTimeout(new TimeInterval(30L, "SECONDS"));
     return service;
   }
+
 }
