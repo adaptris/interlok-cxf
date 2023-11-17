@@ -1,6 +1,7 @@
 package com.adaptris.core.services.cxf;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,7 +9,7 @@ import java.util.Map;
 import javax.xml.transform.Source;
 import javax.xml.ws.Dispatch;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 public class DispatchConfigTest {
@@ -76,7 +77,7 @@ public class DispatchConfigTest {
 
   private Dispatch<Source> mock(Map<String, Object> requestContext) {
     Dispatch<Source> dispatcher = Mockito.mock(Dispatch.class);
-    Mockito.when(dispatcher.getRequestContext()).thenReturn(requestContext);
+    when(dispatcher.getRequestContext()).thenReturn(requestContext);
     return dispatcher;
   }
 }

@@ -1,9 +1,9 @@
 package com.adaptris.core.services.cxf;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,7 +17,7 @@ import javax.xml.ws.handler.MessageContext;
 
 import org.apache.cxf.jaxws.DispatchImpl;
 import org.apache.cxf.jaxws.binding.http.HTTPBindingImpl;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import com.adaptris.core.MetadataElement;
@@ -27,19 +27,18 @@ public class MetadataToRequestHeadersTest {
   @Test
   public void testGetRequestHeaders() {
     MyMessageContext ctx = new MyMessageContext(false);
-    Map<String, List> h1 = MetadataToRequestHeaders.getRequestHeaders(ctx);
+    Map<String, List<?>> h1 = MetadataToRequestHeaders.getRequestHeaders(ctx);
     assertNotNull(h1);
     assertFalse(h1 == ctx.httpHeaders);
     MyMessageContext ctx2 = new MyMessageContext(true);
-    Map<String, List> h2 = MetadataToRequestHeaders.getRequestHeaders(ctx2);
+    Map<String, List<?>> h2 = MetadataToRequestHeaders.getRequestHeaders(ctx2);
     assertNotNull(h2);
     assertTrue(h2 == ctx2.httpHeaders);
   }
 
-
   @Test
   public void testRegister_NoHandlerChain() {
-    Dispatch dispatch = Mockito.mock(DispatchImpl.class);
+    Dispatch<?> dispatch = Mockito.mock(DispatchImpl.class);
     HTTPBindingImpl binding = Mockito.mock(HTTPBindingImpl.class);
     Mockito.when(dispatch.getBinding()).thenReturn(binding);
     Mockito.when(binding.getHandlerChain()).thenReturn(null);
@@ -51,7 +50,7 @@ public class MetadataToRequestHeadersTest {
   @Test
   public void testRegister_HandlerChain() {
     List<Handler> list = new ArrayList<>();
-    Dispatch dispatch = Mockito.mock(DispatchImpl.class);
+    Dispatch<?> dispatch = Mockito.mock(DispatchImpl.class);
     HTTPBindingImpl binding = Mockito.mock(HTTPBindingImpl.class);
     Mockito.when(dispatch.getBinding()).thenReturn(binding);
     Mockito.when(binding.getHandlerChain()).thenReturn(list);
@@ -65,7 +64,7 @@ public class MetadataToRequestHeadersTest {
     List<Handler> list = new ArrayList<>();
     List<MetadataElement> elements = Arrays.asList(new MetadataElement("hello", "world"));
 
-    Dispatch dispatch = Mockito.mock(DispatchImpl.class);
+    Dispatch<?> dispatch = Mockito.mock(DispatchImpl.class);
     HTTPBindingImpl binding = Mockito.mock(HTTPBindingImpl.class);
     Mockito.when(dispatch.getBinding()).thenReturn(binding);
     Mockito.when(binding.getHandlerChain()).thenReturn(list);
@@ -84,7 +83,7 @@ public class MetadataToRequestHeadersTest {
     List<Handler> list = new ArrayList<>();
     List<MetadataElement> elements = Arrays.asList(new BrokenMetadataElement("hello", "world"));
 
-    Dispatch dispatch = Mockito.mock(DispatchImpl.class);
+    Dispatch<?> dispatch = Mockito.mock(DispatchImpl.class);
     HTTPBindingImpl binding = Mockito.mock(HTTPBindingImpl.class);
     Mockito.when(dispatch.getBinding()).thenReturn(binding);
     Mockito.when(binding.getHandlerChain()).thenReturn(list);
@@ -102,7 +101,7 @@ public class MetadataToRequestHeadersTest {
     List<Handler> list = new ArrayList<>();
     List<MetadataElement> elements = Arrays.asList(new MetadataElement("hello", "world"));
 
-    Dispatch dispatch = Mockito.mock(DispatchImpl.class);
+    Dispatch<?> dispatch = Mockito.mock(DispatchImpl.class);
     HTTPBindingImpl binding = Mockito.mock(HTTPBindingImpl.class);
     Mockito.when(dispatch.getBinding()).thenReturn(binding);
     Mockito.when(binding.getHandlerChain()).thenReturn(list);
@@ -115,12 +114,11 @@ public class MetadataToRequestHeadersTest {
     assertTrue(list.get(0).handleFault(ctx));
   }
 
-
   @SuppressWarnings("serial")
   private class MyMessageContext extends HashMap<String, Object> implements MessageContext {
 
     private Map<String, Scope> scopes = new HashMap<>();
-    private Map<String, List> httpHeaders = new HashMap<>();
+    private Map<String, List<?>> httpHeaders = new HashMap<>();
 
     public MyMessageContext(boolean withRequestHdrs) {
       super();
