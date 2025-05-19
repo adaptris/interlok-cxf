@@ -8,4 +8,11 @@
     <packageUrl regex="true">^pkg:maven/org\.apache\.cxf/cxf\-rt\-bindings\-soap@.*$</packageUrl>
     <cve>CVE-2022-40705</cve>
   </suppress>
+  <suppress>
+    <notes><![CDATA[
+    False positive for org.eclipse.parsson:parsson.
+    This project uses org.glassfish:javax.json for JSON processing
+    ]]></notes>
+    <cve>CVE-2023-7272</cve>
+  </suppress>
 </suppressions>
