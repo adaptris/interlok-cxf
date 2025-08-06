@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.xml.transform.Source;
-import javax.xml.ws.Dispatch;
+import jakarta.xml.ws.Dispatch;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

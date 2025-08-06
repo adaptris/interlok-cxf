@@ -11,12 +11,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.ws.Dispatch;
-import javax.xml.ws.handler.Handler;
-import javax.xml.ws.handler.MessageContext;
+import jakarta.xml.ws.Binding;
+import jakarta.xml.ws.Dispatch;
+import jakarta.xml.ws.handler.Handler;
+import jakarta.xml.ws.handler.MessageContext;
 
-import org.apache.cxf.jaxws.DispatchImpl;
-import org.apache.cxf.jaxws.binding.http.HTTPBindingImpl;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -38,8 +37,8 @@ public class MetadataToRequestHeadersTest {
 
   @Test
   public void testRegister_NoHandlerChain() {
-    Dispatch<?> dispatch = Mockito.mock(DispatchImpl.class);
-    HTTPBindingImpl binding = Mockito.mock(HTTPBindingImpl.class);
+    Dispatch<?> dispatch = Mockito.mock(Dispatch.class);
+    Binding binding = Mockito.mock(Binding.class);
     Mockito.when(dispatch.getBinding()).thenReturn(binding);
     Mockito.when(binding.getHandlerChain()).thenReturn(null);
 
@@ -50,8 +49,8 @@ public class MetadataToRequestHeadersTest {
   @Test
   public void testRegister_HandlerChain() {
     List<Handler> list = new ArrayList<>();
-    Dispatch<?> dispatch = Mockito.mock(DispatchImpl.class);
-    HTTPBindingImpl binding = Mockito.mock(HTTPBindingImpl.class);
+    Dispatch<?> dispatch = Mockito.mock(Dispatch.class);
+    Binding binding = Mockito.mock(Binding.class);
     Mockito.when(dispatch.getBinding()).thenReturn(binding);
     Mockito.when(binding.getHandlerChain()).thenReturn(list);
 
@@ -64,8 +63,8 @@ public class MetadataToRequestHeadersTest {
     List<Handler> list = new ArrayList<>();
     List<MetadataElement> elements = Arrays.asList(new MetadataElement("hello", "world"));
 
-    Dispatch<?> dispatch = Mockito.mock(DispatchImpl.class);
-    HTTPBindingImpl binding = Mockito.mock(HTTPBindingImpl.class);
+    Dispatch<?> dispatch = Mockito.mock(Dispatch.class);
+    Binding binding = Mockito.mock(Binding.class);
     Mockito.when(dispatch.getBinding()).thenReturn(binding);
     Mockito.when(binding.getHandlerChain()).thenReturn(list);
 
@@ -83,8 +82,8 @@ public class MetadataToRequestHeadersTest {
     List<Handler> list = new ArrayList<>();
     List<MetadataElement> elements = Arrays.asList(new BrokenMetadataElement("hello", "world"));
 
-    Dispatch<?> dispatch = Mockito.mock(DispatchImpl.class);
-    HTTPBindingImpl binding = Mockito.mock(HTTPBindingImpl.class);
+    Dispatch<?> dispatch = Mockito.mock(Dispatch.class);
+    Binding binding = Mockito.mock(Binding.class);
     Mockito.when(dispatch.getBinding()).thenReturn(binding);
     Mockito.when(binding.getHandlerChain()).thenReturn(list);
 
@@ -101,8 +100,8 @@ public class MetadataToRequestHeadersTest {
     List<Handler> list = new ArrayList<>();
     List<MetadataElement> elements = Arrays.asList(new MetadataElement("hello", "world"));
 
-    Dispatch<?> dispatch = Mockito.mock(DispatchImpl.class);
-    HTTPBindingImpl binding = Mockito.mock(HTTPBindingImpl.class);
+    Dispatch<?> dispatch = Mockito.mock(Dispatch.class);
+    Binding binding = Mockito.mock(Binding.class);
     Mockito.when(dispatch.getBinding()).thenReturn(binding);
     Mockito.when(binding.getHandlerChain()).thenReturn(list);
 
