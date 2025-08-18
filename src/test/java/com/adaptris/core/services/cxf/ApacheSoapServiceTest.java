@@ -11,7 +11,7 @@ import java.io.ByteArrayInputStream;
 import java.util.concurrent.TimeUnit;
 
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.ws.soap.SOAPFaultException;
+import jakarta.xml.ws.soap.SOAPFaultException;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;

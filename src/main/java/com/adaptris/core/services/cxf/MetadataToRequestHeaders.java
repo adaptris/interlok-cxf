@@ -7,9 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.ws.Dispatch;
-import javax.xml.ws.handler.Handler;
-import javax.xml.ws.handler.MessageContext;
+import jakarta.xml.ws.Dispatch;
+import jakarta.xml.ws.handler.Handler;
+import jakarta.xml.ws.handler.MessageContext;
 
 import com.adaptris.core.MetadataElement;
 
