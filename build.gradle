@@ -143,6 +143,7 @@ dependencies {
   api ("com.adaptris:interlok-common:$interlokCoreVersion") { changing= true}
   api ("org.apache.cxf:cxf-rt-frontend-jaxws:$cxfVersion")
   api ("org.apache.cxf:cxf-rt-transports-http:$cxfVersion")
+  implementation ("org.apache.neethi:neethi:3.2.2")
 
  if (JavaVersion.current().ordinal() >= JavaVersion.VERSION_1_9.ordinal()) {
     api ("javax.xml.ws:jaxws-api:2.3.1")
@@ -336,6 +337,12 @@ dependencyCheck  {
   }
   analyzers {
     assemblyEnabled=false
+	ossIndex {
+    enabled = System.getenv("OSS_INDEX_USERNAME") != null && System.getenv("OSS_INDEX_PASSWORD") != null
+	  username = System.getenv("OSS_INDEX_USERNAME")
+	  password = System.getenv("OSS_INDEX_PASSWORD")
+  	  warnOnlyOnRemoteErrors = true
+    }
   }
 }
 
