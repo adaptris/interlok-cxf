@@ -143,7 +143,7 @@ dependencies {
   api ("com.adaptris:interlok-common:$interlokCoreVersion") { changing= true}
   api ("org.apache.cxf:cxf-rt-frontend-jaxws:$cxfVersion")
   api ("org.apache.cxf:cxf-rt-transports-http:$cxfVersion")
-  implementation ("org.apache.neethi:neethi:3.2.2")
+  implementation ("org.apache.neethi:neethi:3.2.3")
 
  if (JavaVersion.current().ordinal() >= JavaVersion.VERSION_1_9.ordinal()) {
     api ("javax.xml.ws:jaxws-api:2.3.1")
