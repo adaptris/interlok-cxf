@@ -34,4 +34,47 @@
     ]]></notes>
     <packageUrl regex="true">^pkg:maven/org\.eclipse\.jetty(\.http2|\.websocket)?/.+@10\.0\.26$</packageUrl>
     <cve>CVE-2026-2332</cve>
-  </suppress></suppressions>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+      Apache CXF is pinned to 3.6.8 for this Interlok 5 / Java 17 release line.
+      Suppress until a coordinated CXF upgrade path is validated.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.cxf/cxf-.+@3\.6\.8$</packageUrl>
+    <cve>CVE-2026-44417</cve>
+    <cve>CVE-2026-44618</cve>
+    <cve>CVE-2026-44930</cve>
+    <cve>CVE-2026-49875</cve>
+    <cve>CVE-2026-50623</cve>
+    <cve>CVE-2026-50627</cve>
+    <cve>CVE-2026-50628</cve>
+    <cve>CVE-2026-50629</cve>
+    <cve>CVE-2026-50630</cve>
+    <cve>CVE-2026-50631</cve>
+    <cve>CVE-2026-50632</cve>
+    <cve>CVE-2026-50633</cve>
+    <cve>CVE-2026-50634</cve>
+    <cve>CVE-2026-50645</cve>
+    <cve>CVE-2026-54225</cve>
+    <cve>CVE-2026-57817</cve>
+    <cve>CVE-2026-57818</cve>
+    <cve>CVE-2026-57819</cve>
+    <cve>CVE-2026-61466</cve>
+    <cve>CVE-2026-63687</cve>
+    <cve>CVE-2026-64958</cve>
+    <cve>CVE-2026-65432</cve>
+    <cve>CVE-2026-65583</cve>
+    <cve>CVE-2026-66909</cve>
+    <cve>CVE-2026-68079</cve>
+    <cve>CVE-2026-68481</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+      Neethi is pinned to 3.2.2 by the CXF stack in this release line.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.neethi/neethi@3\.2\.2$</packageUrl>
+    <cve>CVE-2026-66142</cve>
+    <cve>CVE-2026-66143</cve>
+    <cve>CVE-2026-66144</cve>
+  </suppress>
+</suppressions>
