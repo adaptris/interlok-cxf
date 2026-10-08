@@ -27,7 +27,8 @@
     <cve>CVE-2026-40974</cve>
     <cve>CVE-2026-40975</cve>
     <cve>CVE-2026-40977</cve>
-  </suppress>  <suppress>
+  </suppress>
+  <suppress>
     <notes><![CDATA[
       Jetty 10.0.26 is the newest Jetty 10 release available in Maven Central. Remediation for this CVE
       requires moving off the Jetty 10 line, which is outside the current Java 17 / Jetty 10 constraints.
@@ -37,13 +38,13 @@
   </suppress>
   <suppress>
     <notes><![CDATA[
-      Apache CXF is pinned to 3.6.8 for this Interlok 5 / Java 17 release line.
-      Suppress until a coordinated CXF upgrade path is validated.
+      False-positive CPE matches for Apache CXF 3.6.13.
+      Apache's security advisories identify 3.6.12 as the fixed version for these CVEs.
+      The project uses 3.6.13, the latest available 3.6.x patch release.
+      See https://cxf.apache.org/security-advisories.html
+      Keep this exception scoped to the verified version until the vulnerability data is corrected.
     ]]></notes>
-    <packageUrl regex="true">^pkg:maven/org\.apache\.cxf/cxf-.+@3\.6\.8$</packageUrl>
-    <cve>CVE-2026-44417</cve>
-    <cve>CVE-2026-44618</cve>
-    <cve>CVE-2026-44930</cve>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.cxf/cxf-.+@3\.6\.13$</packageUrl>
     <cve>CVE-2026-49875</cve>
     <cve>CVE-2026-50623</cve>
     <cve>CVE-2026-50627</cve>
@@ -55,26 +56,5 @@
     <cve>CVE-2026-50633</cve>
     <cve>CVE-2026-50634</cve>
     <cve>CVE-2026-50645</cve>
-    <cve>CVE-2026-54225</cve>
-    <cve>CVE-2026-57817</cve>
-    <cve>CVE-2026-57818</cve>
-    <cve>CVE-2026-57819</cve>
-    <cve>CVE-2026-61466</cve>
-    <cve>CVE-2026-63687</cve>
-    <cve>CVE-2026-64958</cve>
-    <cve>CVE-2026-65432</cve>
-    <cve>CVE-2026-65583</cve>
-    <cve>CVE-2026-66909</cve>
-    <cve>CVE-2026-68079</cve>
-    <cve>CVE-2026-68481</cve>
-  </suppress>
-  <suppress>
-    <notes><![CDATA[
-      Neethi is pinned to 3.2.2 by the CXF stack in this release line.
-    ]]></notes>
-    <packageUrl regex="true">^pkg:maven/org\.apache\.neethi/neethi@3\.2\.2$</packageUrl>
-    <cve>CVE-2026-66142</cve>
-    <cve>CVE-2026-66143</cve>
-    <cve>CVE-2026-66144</cve>
   </suppress>
 </suppressions>
