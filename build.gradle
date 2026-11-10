@@ -31,7 +31,6 @@ ext {
   componentDesc="Execute webservices using Apache CXF"
   organizationName = "Adaptris Ltd"
   organizationUrl = "http://interlok.adaptris.net"
-  cxfVersion = '3.6.13'
 }
 
 
